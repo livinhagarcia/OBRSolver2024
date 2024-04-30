@@ -34,40 +34,54 @@ class MotorPair:
         self.motor2.run(0)
 
 
-def updateLog(name, move_side,log):
-    global logs 
+def updateLog():
+    global logs
+    global name
+    global move_side
+    global log 
     logs = [name,move_side,log]
 
-def axis_correction(set_point = 50):
-    corner = 0
-    suave = 0
-    move_side = None
-    print(sd.reflection())
-    if sd.reflection() > set_point:
-        while sd.reflection() > set_point:
-            motors.start_tank(200,-100)
-            move_side = 'left'
-        corner += 1
-    else:
-        while se.reflection() > set_point:
-            motors.start_tank(-100,200)
-            move_side = 'right'
-        corner += 1
+def axis_correction(set_point_c = 40, set_point_s = 35 ):
+    global corner
+    global name
+    global move_side
+    global log
     if corner == 3:
         motors.stop_tank()
-        wait(2000)
         corner = 0
-        if sd.reflection() < set_point:
-            while sd.reflection() < set_point:
-                motors.start_tank(200,0)
+        if sd.reflection() < set_point_s:
+            while sd.reflection() < set_point_s:
+                motors.start_tank(-200,50)
                 move_side = 'right'
         else: 
-            while sd.reflection() < set_point:
-                motors.start_tank(0,200)
-                move_side = 'left'    
+            while sd.reflection() < set_point_s:
+                motors.start_tank(50,-200)
+                move_side = 'left'
+        name = "axis correction **Suave**"
+        log = 'succeded'
+    else:
+        if sd.reflection() > set_point_c:
+            while sd.reflection() > set_point_c:
+                motors.start_tank(300,-50)
+                move_side = 'left'
+            corner += 1
+        else:
+            while se.reflection() > set_point_c:
+                motors.start_tank(-50,300)
+                move_side = 'right'
+            corner += 1
+        name = "axis correction **Corner**"
+        log = 'succeded'
+    updateLog()
+    return [name, move_side, log]
+    
+       
 
 
 def proportionalAlign(errorE,errorD, kP):
+    global name
+    global move_side
+    global log
     name ='proportionalAlign'
     move_side = ''
     log='failed'
@@ -80,7 +94,7 @@ def proportionalAlign(errorE,errorD, kP):
     else:
         move_side = 'left'
     log = 'succeded'
-    updateLog(name,move_side,log)
+    updateLog()
     return [name, move_side, log]
 # def intersectionSolver():
 
@@ -112,7 +126,11 @@ sd = ColorSensor(Port.C)
 se = ColorSensor(Port.F)
 
 # defining the log list
-logs = ['','','']
+name = 'Beginning run'
+move_side = 'None'
+log = 'succeded'
+logs = [name,move_side,log]
+corner = 0
 
 if __name__ == "__main__":
     while 1:
@@ -135,6 +153,7 @@ if __name__ == "__main__":
                 else:
                     if se_value < 30 and sd_value < 30:
                         print("------ crossing line -----")
+                        motors.move_tank(10, 200, 200)
                         se_value = se.reflection()
                         sd_value = sd.reflection()
                         sc_value = sc.reflection()
