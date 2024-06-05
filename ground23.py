@@ -488,7 +488,7 @@ if __name__ == "__main__":
         if mode == "calibrate":
             print("------calibrando------")
 
-            print(getGreenValues())
+            print(getGreenValues(se, sd))
 
             minMedian = [
                 (leftValues[0][0] + rightValues[0][0]) / 2,
