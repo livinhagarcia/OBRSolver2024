@@ -487,8 +487,9 @@ if __name__ == "__main__":
             mode = "calibrate"
         if mode == "calibrate":
             print("------calibrando------")
-            leftValues = getGreenValues(se, "esquerda")
-            rightValues = getGreenValues(sd, "direita")
+
+            print(getGreenValues())
+
             minMedian = [
                 (leftValues[0][0] + rightValues[0][0]) / 2,
                 (leftValues[0][1] + rightValues[0][1]) / 2,
