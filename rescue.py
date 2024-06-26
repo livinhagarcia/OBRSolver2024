@@ -163,6 +163,7 @@ def FindSafe(areas):
     
     pos_areas = areas
     if [PontoInicial[0],PontoInicial[1]] in pos_areas:
+        print("estou aqui")
         pos_areas.pop(pos_areas.index([PontoInicial[0],PontoInicial[1]]))
     if [out[0],out[1]] in pos_areas:
         pos_areas.pop(pos_areas.index([out[0],out[1]]))
@@ -212,7 +213,7 @@ PontoInicial = [1925,385,0]
 Center = [1155,1155]
 AreaResgate = [[385,385],[385,1925],[1925,1925],[1925,385]]
 out = [385,385,-90]
-robo = Robot(Port.A, Port.B, None, PontoInicial)
+robo = Robot(Port.A, Port.B, None, [PontoInicial[0],PontoInicial[1], 0])
 def main():
     
 
