@@ -5,6 +5,8 @@ from pybricks.robotics import DriveBase
 from pybricks.tools import wait, StopWatch
 import umath as math
 
+u2 = UltrasonicSensor(Port.E)
+u_value = u2.distance()
 
 hub = PrimeHub()
 
@@ -60,10 +62,10 @@ class Robot:
 
     def pointTo(self, degrees, precision = 5):
         dir = self.position[2]
-        print(range(degrees - precision, degrees + precision))
+        # print(range(degrees - precision, degrees + precision))
         if(dir < degrees):
             while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
-                print(self.hub.imu.heading())
+                # print(self.hub.imu.heading())
                 self.motors.start_tank(-200,200)
             self.motors.stop_tank()
         else:
@@ -137,6 +139,18 @@ class Robot:
         self.map.addPoint(self.position)
         return 1
 
+    def pointToaPoint(self,x,y):
+        x = int( x + (-1*self.position[0]) )
+        y = int( y + (-1*self.position[1]) )
+        # dist = math.sqrt(x**2 + y**2)
+        if x != 0 and y > 0:
+            self.pointTo(int(math.degrees(math.atan(x/y))))
+        elif x > 0 and y < 0:
+            self.pointTo(90 + int(abs(math.degrees(math.atan(y/x)))))
+        elif x < 0 and y < 0:
+            self.pointTo(-90 - int(abs(math.degrees(math.atan(y/x)))))
+        return 1
+
     def doRoute(self, pointlist, goandback = 'go'):
         for point in pointlist:
             self.goTo(point[0],point[1])
@@ -145,28 +159,76 @@ class Robot:
             lista.reverse()
             self.doRoute(lista)
 
+def FindSafe(areas):
+    
+    pos_areas = areas
+    if [PontoInicial[0],PontoInicial[1]] in pos_areas:
+        pos_areas.pop(pos_areas.index([PontoInicial[0],PontoInicial[1]]))
+    if [out[0],out[1]] in pos_areas:
+        pos_areas.pop(pos_areas.index([out[0],out[1]]))
+    for area in pos_areas:
+        robo.pointToaPoint(area[0], area[1])
+        wait(2000)
+        u_value = u2.distance()
+        if u_value > 250 and u_value < 350:
+            print('Safe on:' + str(area))
+            return area
+    return False
+    # robo.pointToaPoint(385,385)
+    # wait(2000)
+    # u_value = u2.distance()
+    # print(u_value)
+    # if u_value > 250 and u_value < 350:
+    #     print('Safe1')
+    #     return [385,385]
+    # robo.pointToaPoint(385,1925)
+    # wait(2000)
+    # u_value = u2.distance()
+    # print(u_value)
+    # if u_value > 250 and u_value < 350:
+    #     print('Safe2')
+    #     return [385,1925]
+    # robo.pointToaPoint(1925,1925)
+    # wait(2000)
+    # u_value = u2.distance()
+    # print(u_value)
+    # if u_value > 250 and u_value < 350:
+    #     print('Safe3')
+    #     return [1925,1925]
+    # robo.pointToaPoint(1925,385)
+    # wait(2000)
+    # u_value = u2.distance()
+    # print(u_value)
+    # if u_value > 250 and u_value < 350:
+    #     print('Safe4')
+    #     return[1925,385]
+    # return False
+
+
+safe = None
+ListaPontos = [[385,385],[1155,385],[1925,385]]
+#Saídas = [[385,0],[1155,0],[1925,0],[385,2310][1155,2310],[1925,2310],[0,385],[0,1155],[0,1925],[2310,385],[2310,1155],[2310,1925]]
+PontoInicial = [1925,385,0]
+Center = [1155,1155]
+AreaResgate = [[385,385],[385,1925],[1925,1925],[1925,385]]
+out = [385,385,-90]
+robo = Robot(Port.A, Port.B, None, PontoInicial)
 def main():
-    safe = None
-    out = [385,385]
-    ListaPontos = [[385,385],[1155,385],[1925,385],]
-    PontoInicial = [1925,385,0]
-    Center = [1155,1155]
-    #AreaResgate = [[385,385],[1925,385],[385,1925],[1925,1925]]
+    
+
 
     # pontomeio = [385,385]
     # lista_de_pontos_iniciais[[0,0],[0,1]]
     # robo = Robot(Port.A, Port.B, None, [385,0,0])
     # robo.goTo(pontomeio[0],pontomeio[1])
-    robo = Robot(Port.A, Port.B, None, PontoInicial)
+    
     robo.goTo(1155,1155)#go to center
-    if safe != None:
-        print("Align to release")
+    safe = FindSafe(AreaResgate)
+    if not safe:
+        robo.goTo(out[0], out[1])
+        robo.pointTo(out[2])
     else:
-        print("Find Safe")
-    robo.goTo(out[0],out[1])
-
-
-
+        robo.goTo(safe[0], safe[1])
 
     print(robo.map.points)
 main()
