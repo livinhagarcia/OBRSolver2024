@@ -319,151 +319,27 @@ class Intersection:
         return [esquerda, direita]
 
 #creating recovery task function
-def recoveryTask():
-    recoveryTaskDisplay()
-    # global logs
-    # global name 
-    # global move_side
-    # global log 
-    # if logs[0] == "proportionalAlign":
-    #     timeout = 0
-    #     while se.reflection() > 20 and sc.reflection() > 20 and sd.reflection() > 20 and timeout < 3000 :
-    #         motors.start_tank(-200,-200)
-    #         wait(10)
-    #         timeout += 10
-    #     motors.stop_tank()
-    #     if se.reflection() < 20 or sc.reflection() < 20 or sd.reflection() < 20:
-    #         name = "recovery task"
-    #         move_side = move_side
-    #         log = "succeded"
-    #         updateLog()
-    #         return "succeded"
-    #     else:
-    #         name = "recovery task"
-    #         move_side = move_side
-    #         log = "failed"
-    #         updateLog()
-    #         return "succeded"
-    # if logs[0] == "axis correction" or logs[0] == "intersection solver":
-    #     if logs[0] == "intersection solver":
-    #         if logs[1] == "right":
-    #             logs[1] = "left"
-    #         if logs[1] == "left":
-    #             logs[1] = "right"
-    #     yaw.reset_heading()
-    #     if logs[1] == "right":
-    #         motors.start_tank(-200,200)
-    #         while yaw.heading() >= -90:
-    #             if se.reflection() < 20 or sd.reflection() < 20:
-    #                 name = "recovery task"
-    #                 move_side = "left"
-    #                 log = "succeded"
-    #                 updateLog()
-    #                 return "succeded"
-    #             else:
-    #                 timeout = 0
-    #                 while se.reflection() > 20 and sc.reflection() > 20 and sd.reflection() > 20 and timeout < 3000 :
-    #                     motors.start_tank(-200,-200)
-    #                     wait(10)
-    #                     timeout += 10
-    #                 motors.stop_tank()
-    #                 if se.reflection() < 20 or sc.reflection() < 20 or sd.reflection() < 20:
-    #                     name = "recovery task"
-    #                     move_side = move_side
-    #                     log = "succeded"
-    #                     updateLog()
-    #                     return "succeded"
-    #                 else:
-    #                     name = "recovery task"
-    #                     move_side = move_side
-    #                     log = "failed"
-    #                     updateLog()
-    #                     return "succeded"
-    #         yaw.reset_heading()
-    #         motors.start_tank(200,-200)
-    #         while yaw.heading() <= 90:
-    #             if se.reflection() < 20 or sd.reflection() < 20:
-    #                 name = "recovery task"
-    #                 move_side = "right"
-    #                 log = "succeded"
-    #                 updateLog()
-    #                 return "succeded"
-    #             else:
-    #                 timeout = 0
-    #                 while se.reflection() > 20 and sc.reflection() > 20 and sd.reflection() > 20 and timeout < 3000 :
-    #                     motors.start_tank(-200,-200)
-    #                     wait(10)
-    #                     timeout += 10
-    #                 motors.stop_tank()
-    #                 if se.reflection() < 20 or sc.reflection() < 20 or sd.reflection() < 20:
-    #                     name = "recovery task"
-    #                     move_side = move_side
-    #                     log = "succeded"
-    #                     updateLog()
-    #                     return "succeded"
-    #                 else:
-    #                     name = "recovery task"
-    #                     move_side = move_side
-    #                     log = "failed"
-    #                     updateLog()
-    #                     return "succeded"
-    #     if logs[1] == "left":
-    #         motors.start_tank(200,-200)
-    #         while yaw.heading() <= 90:
-    #             if se.reflection() < 20 or sd.reflection() < 20:
-    #                 name = "recovery task"
-    #                 move_side = "right"
-    #                 log = "succeded"
-    #                 updateLog()
-    #                 return "succeded"
-    #             else:
-    #                 timeout = 0
-    #                 while se.reflection() > 20 and sc.reflection() > 20 and sd.reflection() > 20 and timeout < 3000 :
-    #                     motors.start_tank(-200,-200)
-    #                     wait(10)
-    #                     timeout += 10
-    #                 motors.stop_tank()
-    #                 if se.reflection() < 20 or sc.reflection() < 20 or sd.reflection() < 20:
-    #                     name = "recovery task"
-    #                     move_side = move_side
-    #                     log = "succeded"
-    #                     updateLog()
-    #                     return "succeded"
-    #                 else:
-    #                     name = "recovery task"
-    #                     move_side = move_side
-    #                     log = "failed"
-    #                     updateLog()
-    #                     return "succeded"
-    #         yaw.reset_heading()
-    #         motors.start_tank(-200,200)
-    #         while yaw.heading() >= -90:
-    #             if se.reflection() < 20 or sd.reflection() < 20:
-    #                 name = "recovery task"
-    #                 move_side = "left"
-    #                 log = "succeded"
-    #                 updateLog()
-    #                 return "succeded"
-    #             else:
-    #                 timeout = 0
-    #                 while se.reflection() > 20 and sc.reflection() > 20 and sd.reflection() > 20 and timeout < 3000 :
-    #                     motors.start_tank(-200,-200)
-    #                     wait(10)
-    #                     timeout += 10
-    #                 motors.stop_tank()
-    #                 if se.reflection() < 20 or sc.reflection() < 20 or sd.reflection() < 20:
-    #                     name = "recovery task"
-    #                     move_side = move_side
-    #                     log = "succeded"
-    #                     updateLog()
-    #                     return "succeded"
-    #                 else:
-    #                     name = "recovery task"
-    #                     move_side = move_side
-    #                     log = "failed"
-    #                     updateLog()
-    #                     return "succeded"
-
+def recoveryTask(last_task):
+    recoveryTaskDisplay() #displaying an "R" to the hub screen
+    ltName = last_task[0] #defining a variable for the last task name
+    ltMoveSide = last_task[1] #defining a variable for the move side of the last task
+    
+    if ltName == "axis correction **Corner**" or ltName == "axis correction **Suave**": #if last task was axis correction, then:
+        if ltMoveSide == "right": #if last task side was right, then:
+            print(ltMoveSide)
+            motors.move_tank(1000,-200,200)
+        if ltMoveSide == "left": #if last task side was left, then:
+            print(ltMoveSide) 
+            motors.move_tank(1000,200,-200)
+    if ltName == "intersectionSolver" #if last task was intersection solver, then:
+        if ltMoveSide == "right": #if last task side was right, then:
+            print(ltMoveSide)
+            motors.move_tank(1000,200,-200)
+        if ltMoveSide == "left": #if last task side was left, then:
+            print(ltMoveSide)
+            motors.move_tank(1000,-200,200)
+    if ltName == "proportional align": #if last task was proportional align, then:
+        print(ltName)
 #creating a function to avoid the obstacle            
 def desviarObs(lado = 'right'):
     desviarObsDisplay()
@@ -583,10 +459,10 @@ if __name__ == "__main__":
                         updateLog(i.intersectionSolver(valores_verdes))# do intersection solver
                     if se_value > 80 and sd_value > 80 and sc_value > 80: #if every sensor is seeing white, then:
                         if logs[-1][0] == 'proportional align': #if the last task was proportional align(if the robot were in line before seeing all white), then:
-                            
+                            motors.move_tank(1800,200,200)
                             updateLog(["gap", 'None', "succeded"]) #it's a gap(uptade the log to a gap case)
                         else: #if the last task wasn't proportional align(something is wrong), then:
-                            recoveryTask() #shit, lets try recovery task
+                            recoveryTask(logs[-1]) #shit, lets try recovery task
                     else: #else, if the robot isn't in line and isn't seeing everything white, then:
                         motors.stop_tank() #stop the motors from moving
                         if se_value < 30 and sd_value < 30: #if both right-left sensors are seeing black, then:
