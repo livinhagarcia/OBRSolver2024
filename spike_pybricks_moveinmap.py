@@ -58,9 +58,9 @@ class Robot:
         if force_sensor_port:
             self.force_sensor = ForceSensor(force_sensor_port)
 
-    def pointTo(self, degrees, precision = 1):
+    def pointTo(self, degrees, precision = 3):
         dir = self.position[2]
-        print(range(degrees - precision, degrees + precision))
+        # print(range(degrees - precision, degrees + precision))
         if(dir < degrees):
             while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
                 print(self.hub.imu.heading())
@@ -73,6 +73,28 @@ class Robot:
         print('turning ' + str(degrees) + ' degrees')
         self.position[2] = self.hub.imu.heading()
         self.map.points[-1][2] = self.position[2]
+    
+    def back_pointTo(self, degrees, precision = 3):
+        dir = self.position[2]
+        if degrees < 0:
+            degrees += 180
+        else:
+            degrees -= 180
+        # degrees = degrees * -1 
+        # print(range(degrees - precision, degrees + precision))
+        if(dir < degrees):
+            while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
+                print(self.hub.imu.heading())
+                self.motors.start_tank(-200,200)
+            self.motors.stop_tank()
+        else:
+            while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
+                self.motors.start_tank(200,-200)
+            self.motors.stop_tank()
+        print('turning ' + str(degrees) + ' degrees')
+        self.position[2] = self.hub.imu.heading()
+        self.map.points[-1][2] = self.position[2]
+
 
     def calibrateDirTo(self, goal, precision = 1):
         dir = self.position[2]
@@ -97,7 +119,7 @@ class Robot:
                 self.pointTo(90)
             else:
                 self.pointTo(-90)
-            self.motors.move(abs(q),'cm', 0, 50)
+            self.motors.move_angle(abs(q), 200, 200)
             print('moving ' + str(q) + ' on X')
             self.position[0] += q
             self.map.addPoint(self.position)
@@ -108,10 +130,38 @@ class Robot:
                 self.pointTo(0)
             else:
                 self.pointTo(178)
-            self.motors.move(abs(q),'cm', 0, 50)
+            self.motors.move_angle(abs(q),200, 200)
             print('moving ' + str(q) + ' on Y')
             self.position[1] += q
             self.map.addPoint(self.position)
+    
+    def back_goTo(self,x,y):
+        x = int( x + (-1*self.position[0]) )
+        y = int( y + (-1*self.position[1]) )
+        dist = math.sqrt(x**2 + y**2)
+        if x != 0 and y > 0:
+            self.back_pointTo(int(math.degrees(math.atan(x/y))))
+        elif x > 0 and y < 0:
+            self.back_pointTo(90 + int(abs(math.degrees(math.atan(y/x)))))
+        elif x < 0 and y < 0:
+            self.back_pointTo(-90 - int(abs(math.degrees(math.atan(y/x)))))
+        elif x == 0 and y != 0:
+            if y > 0:
+                self.back_pointTo(0)
+            else:
+                self.back_pointTo(180)
+        elif x != 0 and y == 0:
+            if x > 0:
+                self.back_pointTo(90)
+            else:
+                self.back_pointTo(-90)
+        else:
+            return 0
+        self.motors.move_angle(dist,-200, -200)
+        self.position[0] += x
+        self.position[1] += y
+        self.map.addPoint(self.position)
+        return 1
 
     def goTo(self,x,y):
         x = int( x + (-1*self.position[0]) )
@@ -137,10 +187,18 @@ class Robot:
         self.map.addPoint(self.position)
         return 1
 
-    def doRoute(self, pointlist, goandback = 'go'):
+    def doRoute(self, pointlist, goandback = False, back = False):
         for point in pointlist:
-            self.goTo(point[0],point[1])
-        if goandback == 'go_comeback':
+            if back:
+                self.back_goTo(point[0],point[1])    
+            else:
+                self.goTo(point[0],point[1])
+        if goandback == True:
             lista = self.map.points.copy()
             lista.reverse()
-            self.doRoute(lista)
+            self.doRoute(lista, False, back)
+
+robo = Robot(Port.A, Port.B)
+points = [[-10,-20],[-10,20],[10,20],[10,-20],[0,0]]
+if __name__ == '__main__':
+    robo.doRoute(points, True, True)
