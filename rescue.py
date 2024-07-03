@@ -59,13 +59,25 @@ class Robot:
         self.hub.imu.reset_heading(0)
         if force_sensor_port:
             self.force_sensor = ForceSensor(force_sensor_port)
+     
+    def pointToaPoint(self,x,y):
+        x = int( x + (-1*self.position[0]) )
+        y = int( y + (-1*self.position[1]) )
+        # dist = math.sqrt(x**2 + y**2)
+        if x != 0 and y > 0:
+            self.pointTo(int(math.degrees(math.atan(x/y))))
+        elif x > 0 and y < 0:
+            self.pointTo(90 + int(abs(math.degrees(math.atan(y/x)))))
+        elif x < 0 and y < 0:
+            self.pointTo(-90 - int(abs(math.degrees(math.atan(y/x)))))
+        return 1
 
-    def pointTo(self, degrees, precision = 5):
+    def pointTo(self, degrees, precision = 3):
         dir = self.position[2]
         # print(range(degrees - precision, degrees + precision))
         if(dir < degrees):
             while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
-                # print(self.hub.imu.heading())
+                print(self.hub.imu.heading())
                 self.motors.start_tank(-200,200)
             self.motors.stop_tank()
         else:
@@ -75,6 +87,28 @@ class Robot:
         print('turning ' + str(degrees) + ' degrees')
         self.position[2] = self.hub.imu.heading()
         self.map.points[-1][2] = self.position[2]
+    
+    def back_pointTo(self, degrees, precision = 3):
+        dir = self.position[2]
+        if degrees < 0:
+            degrees += 180
+        else:
+            degrees -= 180
+        # degrees = degrees * -1 
+        # print(range(degrees - precision, degrees + precision))
+        if(dir < degrees):
+            while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
+                print(self.hub.imu.heading())
+                self.motors.start_tank(-200,200)
+            self.motors.stop_tank()
+        else:
+            while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
+                self.motors.start_tank(200,-200)
+            self.motors.stop_tank()
+        print('turning ' + str(degrees) + ' degrees')
+        self.position[2] = self.hub.imu.heading()
+        self.map.points[-1][2] = self.position[2]
+
 
     def calibrateDirTo(self, goal, precision = 1):
         dir = self.position[2]
@@ -110,10 +144,38 @@ class Robot:
                 self.pointTo(0)
             else:
                 self.pointTo(178)
-            self.motors.move_angle(abs(q), 200, 200)
+            self.motors.move_angle(abs(q),200, 200)
             print('moving ' + str(q) + ' on Y')
             self.position[1] += q
             self.map.addPoint(self.position)
+    
+    def back_goTo(self,x,y):
+        x = int( x + (-1*self.position[0]) )
+        y = int( y + (-1*self.position[1]) )
+        dist = math.sqrt(x**2 + y**2)
+        if x != 0 and y > 0:
+            self.back_pointTo(int(math.degrees(math.atan(x/y))))
+        elif x > 0 and y < 0:
+            self.back_pointTo(90 + int(abs(math.degrees(math.atan(y/x)))))
+        elif x < 0 and y < 0:
+            self.back_pointTo(-90 - int(abs(math.degrees(math.atan(y/x)))))
+        elif x == 0 and y != 0:
+            if y > 0:
+                self.back_pointTo(0)
+            else:
+                self.back_pointTo(180)
+        elif x != 0 and y == 0:
+            if x > 0:
+                self.back_pointTo(90)
+            else:
+                self.back_pointTo(-90)
+        else:
+            return 0
+        self.motors.move_angle(dist,-200, -200)
+        self.position[0] += x
+        self.position[1] += y
+        self.map.addPoint(self.position)
+        return 1
 
     def goTo(self,x,y):
         x = int( x + (-1*self.position[0]) )
@@ -139,25 +201,16 @@ class Robot:
         self.map.addPoint(self.position)
         return 1
 
-    def pointToaPoint(self,x,y):
-        x = int( x + (-1*self.position[0]) )
-        y = int( y + (-1*self.position[1]) )
-        # dist = math.sqrt(x**2 + y**2)
-        if x != 0 and y > 0:
-            self.pointTo(int(math.degrees(math.atan(x/y))))
-        elif x > 0 and y < 0:
-            self.pointTo(90 + int(abs(math.degrees(math.atan(y/x)))))
-        elif x < 0 and y < 0:
-            self.pointTo(-90 - int(abs(math.degrees(math.atan(y/x)))))
-        return 1
-
-    def doRoute(self, pointlist, goandback = 'go'):
+    def doRoute(self, pointlist, goandback = False, back = False):
         for point in pointlist:
-            self.goTo(point[0],point[1])
-        if goandback == 'go_comeback':
+            if back:
+                self.back_goTo(point[0],point[1])    
+            else:
+                self.goTo(point[0],point[1])
+        if goandback == True:
             lista = self.map.points.copy()
             lista.reverse()
-            self.doRoute(lista)
+            self.doRoute(lista, False, back)
 
 def FindSafe(areas):
     
@@ -171,40 +224,11 @@ def FindSafe(areas):
         robo.pointToaPoint(area[0], area[1])
         wait(2000)
         u_value = u2.distance()
-        if u_value > 250 and u_value < 350:
+        if u_value > 50 and u_value < 350:
+            hub.speaker.beep
             print('Safe on:' + str(area))
             return area
     return False
-    # robo.pointToaPoint(385,385)
-    # wait(2000)
-    # u_value = u2.distance()
-    # print(u_value)
-    # if u_value > 250 and u_value < 350:
-    #     print('Safe1')
-    #     return [385,385]
-    # robo.pointToaPoint(385,1925)
-    # wait(2000)
-    # u_value = u2.distance()
-    # print(u_value)
-    # if u_value > 250 and u_value < 350:
-    #     print('Safe2')
-    #     return [385,1925]
-    # robo.pointToaPoint(1925,1925)
-    # wait(2000)
-    # u_value = u2.distance()
-    # print(u_value)
-    # if u_value > 250 and u_value < 350:
-    #     print('Safe3')
-    #     return [1925,1925]
-    # robo.pointToaPoint(1925,385)
-    # wait(2000)
-    # u_value = u2.distance()
-    # print(u_value)
-    # if u_value > 250 and u_value < 350:
-    #     print('Safe4')
-    #     return[1925,385]
-    # return False
-
 
 safe = None
 ListaPontos = [[385,385],[1155,385],[1925,385]]
@@ -212,24 +236,27 @@ ListaPontos = [[385,385],[1155,385],[1925,385]]
 PontoInicial = [1925,385,0]
 Center = [1155,1155]
 AreaResgate = [[385,385],[385,1925],[1925,1925],[1925,385]]
-out = [385,385,-90]
+out = [1925,1925,90]
 robo = Robot(Port.A, Port.B, None, [PontoInicial[0],PontoInicial[1], 0])
+# pontomeio = [385,385]
+# lista_de_pontos_iniciais[[0,0],[0,1]]
+# robo = Robot(Port.A, Port.B, None, [385,0,0])
+# robo.goTo(pontomeio[0],pontomeio[1])
+
 def main():
-    
-
-
-    # pontomeio = [385,385]
-    # lista_de_pontos_iniciais[[0,0],[0,1]]
-    # robo = Robot(Port.A, Port.B, None, [385,0,0])
-    # robo.goTo(pontomeio[0],pontomeio[1])
-    
-    robo.goTo(1155,1155)#go to center
+    robo.back_goTo(1155,1155)
     safe = FindSafe(AreaResgate)
     if not safe:
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
     else:
-        robo.goTo(safe[0], safe[1])
+        robo.back_goTo(safe[0], safe[1])
+        robo.goTo(1155,1155)
+        robo.goTo(out[0], out[1])
+        robo.pointTo(out[2])
+
+
+
 
     print(robo.map.points)
 main()
