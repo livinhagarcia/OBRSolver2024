@@ -331,7 +331,7 @@ def recoveryTask(last_task):
         if ltMoveSide == "left": #if last task side was left, then:
             print(ltMoveSide) 
             motors.move_tank(1000,200,-200)
-    if ltName == "intersectionSolver" #if last task was intersection solver, then:
+    if ltName == "intersectionSolver": #if last task was intersection solver, then:
         if ltMoveSide == "right": #if last task side was right, then:
             print(ltMoveSide)
             motors.move_tank(1000,200,-200)
