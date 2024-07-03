@@ -57,7 +57,19 @@ class Robot:
         self.hub.imu.reset_heading(0)
         if force_sensor_port:
             self.force_sensor = ForceSensor(force_sensor_port)
-
+            
+    def pointToaPoint(self,x,y):
+        x = int( x + (-1*self.position[0]) )
+        y = int( y + (-1*self.position[1]) )
+        # dist = math.sqrt(x**2 + y**2)
+        if x != 0 and y > 0:
+            self.pointTo(int(math.degrees(math.atan(x/y))))
+        elif x > 0 and y < 0:
+            self.pointTo(90 + int(abs(math.degrees(math.atan(y/x)))))
+        elif x < 0 and y < 0:
+            self.pointTo(-90 - int(abs(math.degrees(math.atan(y/x)))))
+        return 1
+    
     def pointTo(self, degrees, precision = 3):
         dir = self.position[2]
         # print(range(degrees - precision, degrees + precision))
