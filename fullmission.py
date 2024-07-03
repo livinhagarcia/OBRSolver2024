@@ -143,6 +143,7 @@ def updateLog(log):
 def axis_correction(last_move, set_point_c = 40, set_point_s = 75):
     axisCorrectionDisplay()
     global corner
+    global logs 
     name = ''
     move_side = ''
     log = ''
@@ -153,11 +154,13 @@ def axis_correction(last_move, set_point_c = 40, set_point_s = 75):
         if sd.reflection() < set_point_s:
             while sd.reflection() < set_point_s:
                 motors.start_tank(-150,0)
-                move_side = 'right'
-        if se.reflection() < set_point_s : 
+            move_side = 'right'
+        elif se.reflection() < set_point_s : 
             while se.reflection() < set_point_s:
                 motors.start_tank(0,-150)
-                move_side = 'left'
+            move_side = 'left'
+        else:
+            move_side = logs[-1][1]
         if corner == 5:
             corner == 0
         name = "axis correction **Suave**"
@@ -323,7 +326,7 @@ def recoveryTask(last_task):
     recoveryTaskDisplay() #displaying an "R" to the hub screen
     ltName = last_task[0] #defining a variable for the last task name
     ltMoveSide = last_task[1] #defining a variable for the move side of the last task
-    
+
     if ltName == "axis correction **Corner**" or ltName == "axis correction **Suave**": #if last task was axis correction, then:
         if ltMoveSide == "right": #if last task side was right, then:
             print(ltMoveSide)
