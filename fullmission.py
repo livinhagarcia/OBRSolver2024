@@ -326,23 +326,27 @@ def recoveryTask(last_task):
     recoveryTaskDisplay() #displaying an "R" to the hub screen
     ltName = last_task[0] #defining a variable for the last task name
     ltMoveSide = last_task[1] #defining a variable for the move side of the last task
-
+    isMoveSide = ''
+    if ltMoveSide == 'right':
+        isMoveSide = 'left'
+    if ltMoveSide == 'left':
+        isMoveSide = 'right'
+    name = 'recovery task'
+    move_side = ''
+    log = 'failed'
     if ltName == "axis correction **Corner**" or ltName == "axis correction **Suave**": #if last task was axis correction, then:
         if ltMoveSide == "right": #if last task side was right, then:
-            print(ltMoveSide)
             motors.move_tank(1000,-200,200)
         if ltMoveSide == "left": #if last task side was left, then:
-            print(ltMoveSide) 
             motors.move_tank(1000,200,-200)
     if ltName == "intersectionSolver": #if last task was intersection solver, then:
         if ltMoveSide == "right": #if last task side was right, then:
-            print(ltMoveSide)
             motors.move_tank(1000,200,-200)
         if ltMoveSide == "left": #if last task side was left, then:
-            print(ltMoveSide)
             motors.move_tank(1000,-200,200)
     if ltName == "proportional align": #if last task was proportional align, then:
         print(ltName)
+    return [name, move_side, log]
 #creating a function to avoid the obstacle            
 def desviarObs(lado = 'right'):
     desviarObsDisplay()
@@ -448,6 +452,8 @@ if __name__ == "__main__":
             u_value = u2.distance() # constantly get the distance value
             while checarResgate(u_value) == False: #while the robot isn't in rescue zone, then:
                 print(logs[-1],corner) #debug for showing the logs every second 
+                sensor_values = str(se.reflection()) + ',' + str(sc.reflection()) + ',' + str(sd.reflection()) #sets a variable to show the updated sensor values
+                print(sensor_values) #debug for showing the values of the sensor every second
                 u_value = u2.distance() #constantly get the distance value
                 se_value = se.reflection() #constantly get the left sensor value
                 sd_value = sd.reflection() #constantly get the right sensor value 
@@ -465,7 +471,7 @@ if __name__ == "__main__":
                             motors.move_tank(1800,200,200)
                             updateLog(["gap", 'None', "succeded"]) #it's a gap(uptade the log to a gap case)
                         else: #if the last task wasn't proportional align(something is wrong), then:
-                            recoveryTask(logs[-1]) #shit, lets try recovery task
+                            updateLog(recoveryTask(logs[-1])) #shit, lets try recovery task
                     else: #else, if the robot isn't in line and isn't seeing everything white, then:
                         motors.stop_tank() #stop the motors from moving
                         if se_value < 30 and sd_value < 30: #if both right-left sensors are seeing black, then:
@@ -482,7 +488,5 @@ if __name__ == "__main__":
                                 motors.move_tank(2000, -200, -200) #go back until see black
                                 updateLog(axis_correction(logs[-1][0])) # do axis correction after it returns
                         else: #else, if both left-right are seeing a value higher then 30, then:
-                            print('axis correction no branco')
+                            print('axis correction no branco') #debug
                             updateLog(axis_correction(logs[-1][0])) #do axis correction 
-                msg = str(se.reflection()) + ',' + str(sc.reflection()) + ',' + str(sd.reflection())
-                print(msg)
