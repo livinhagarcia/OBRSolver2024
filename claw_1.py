@@ -23,6 +23,35 @@ class MotorPair:
         self.motor2.stop()
         return "succeded"
 
+class MotorPair:
+    def __init__(self, port1, port2):
+        self.motor1 = Motor(port1)
+        self.motor2 = Motor(port2)
+        self.timer = StopWatch()
+    def move_angle(self,amount,speed1,speed2, timeout = 1000):
+        self.motor1.reset_angle(0)
+        self.motor2.reset_angle(0)
+        self.timer.reset()
+        while abs(self.motor1.angle()) < amount or self.timer.time() < timeout:
+            while abs(self.motor2.angle()) < amount or self.timer.time() < timeout:
+                self.motor1.run(speed1)
+                self.motor2.run((speed2))
+        self.motor1.stop()
+        self.motor2.stop()
+        return "succeded"
+    def move_tank(self,amount, speed1, speed2):    
+        self.motor1.run(speed1)
+        self.motor2.run((speed2))
+        wait(amount)
+        self.motor1.stop()
+        self.motor2.stop()
+    def start_tank(self, speed1, speed2):
+        self.motor1.run(speed1)
+        self.motor2.run((speed2))           
+    def stop_tank(self):
+        self.motor1.run(0)
+        self.motor2.run(0)
+
 class Claw:
     def __init__(self,P1,P2,Hand):
         self.clawPair = MotorPair(P1,P2)
@@ -46,9 +75,7 @@ class Claw:
     def release(self):
         self.open()
         self.down()
-        self.up()
+        wait(1000)
         self.up()
 
 claw = Claw(Port.A, Port.C, Port.D)
-
-claw.release()
