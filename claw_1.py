@@ -28,13 +28,16 @@ class Claw:
         self.clawPair = MotorPair(P1,P2)
         self.hand = Motor(Hand)
     def up(self):
-        self.clawPair.move_tank(105,-200,200)
+        self.clawPair.move_tank(1000,-200,200)
+        print("up")
     def down(self):
-        self.clawPair.move_tank(60,200,-200)
+        self.clawPair.move_tank(700,500,-500)
+        print("down")
     def open(self):
         self.hand.run_angle(-500,20)
     def close(self):
         self.hand.run_angle(500,30)
+        print("close")
     def pickUp(self):
         self.down()
         wait(1000)
@@ -43,6 +46,7 @@ class Claw:
     def release(self):
         self.open()
         self.down()
+        self.up()
         self.up()
 
 claw = Claw(Port.A, Port.C, Port.D)
