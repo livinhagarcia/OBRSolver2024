@@ -8,7 +8,7 @@ import umath as math
 u2 = UltrasonicSensor(Port.E)
 u_value = u2.distance()
 
-hub = PrimeHub()
+hub = PrimeHub(broadcast_channel=1)
 
 class MotorPair:
     def __init__(self, port1, port2):
@@ -236,7 +236,7 @@ ListaPontos = [[385,385],[1155,385],[1925,385]]
 PontoInicial = [1925,385,0]
 Center = [1155,1155]
 AreaResgate = [[385,385],[385,1925],[1925,1925],[1925,385]]
-out = [1925,1925,90]
+out = [385,385,-90]
 robo = Robot(Port.A, Port.B, None, [PontoInicial[0],PontoInicial[1], 0])
 # pontomeio = [385,385]
 # lista_de_pontos_iniciais[[0,0],[0,1]]
@@ -245,18 +245,24 @@ robo = Robot(Port.A, Port.B, None, [PontoInicial[0],PontoInicial[1], 0])
 
 def main():
     robo.back_goTo(1155,1155)
+    hub.ble.broadcast(0) #claw pickup
+    wait(1000)
+    hub.ble.broadcast(2) #claw reset
+    wait(2000)
     safe = FindSafe(AreaResgate)
     if not safe:
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
     else:
         robo.back_goTo(safe[0], safe[1])
+        wait(3000)
+        hub.ble.broadcast(1) #claw release
+        wait(1000)
+        hub.ble.broadcast(2) #claw reset
+        wait(2000)
         robo.goTo(1155,1155)
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
-
-
-
 
     print(robo.map.points)
 main()
