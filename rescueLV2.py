@@ -235,7 +235,7 @@ ListaPontos = [[385,385],[1155,385],[1925,385]]
 #Saídas = [[385,0],[1155,0],[1925,0],[385,2310][1155,2310],[1925,2310],[0,385],[0,1155],[0,1925],[2310,385],[2310,1155],[2310,1925]]
 PontoInicial = [1925,385,0]
 Center = [1155,1155]
-AreaResgate = [[385,385],[385,1925],[1925,1925],[1925,385]]
+AreaResgate = [[385,385],[770, 1925],[1925,1925],[1925,385]]
 out = [385,385,-90]
 robo = Robot(Port.A, Port.B, None, [PontoInicial[0],PontoInicial[1], 0])
 # pontomeio = [385,385]
@@ -244,7 +244,7 @@ robo = Robot(Port.A, Port.B, None, [PontoInicial[0],PontoInicial[1], 0])
 # robo.goTo(pontomeio[0],pontomeio[1])
 
 def main():
-    robo.back_goTo(1155,1155)
+    robo.back_goTo(1500,1155)
     hub.ble.broadcast(0) #claw pickup
     wait(1000)
     hub.ble.broadcast(2) #claw reset
@@ -260,7 +260,7 @@ def main():
         wait(1000)
         hub.ble.broadcast(2) #claw reset
         wait(2000)
-        robo.goTo(1155,1155)
+        robo.goTo(1155,1000)
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
 
