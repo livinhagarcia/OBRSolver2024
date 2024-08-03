@@ -145,7 +145,7 @@ def axis_correction(last_move, set_point_c = 40, set_point_s = 75):
     global corner
     global logs 
     name = ''
-    move_side = ''
+    move_side = logs[-1][1]
     log = ''
     if last_move != "axis correction **Corner**" and last_move != "axis correction **Suave**":
         corner = 0
@@ -159,8 +159,6 @@ def axis_correction(last_move, set_point_c = 40, set_point_s = 75):
             while se.reflection() < set_point_s:
                 motors.start_tank(0,-150)
             move_side = 'left'
-        else:
-            move_side = logs[-1][1]
         if corner == 5:
             corner == 0
         name = "axis correction **Suave**"
@@ -322,11 +320,14 @@ class Intersection:
         return [esquerda, direita]
 
 #creating recovery task function
-def recoveryTask(last_task):
+def recoveryTask():
+    global logs
+    last_task = logs[-1]
     recoveryTaskDisplay() #displaying an "R" to the hub screen
     ltName = last_task[0] #defining a variable for the last task name
     ltMoveSide = last_task[1] #defining a variable for the move side of the last task
     isMoveSide = ''
+    print(ltName)
     if ltMoveSide == 'right':
         isMoveSide = 'left'
     if ltMoveSide == 'left':
@@ -335,10 +336,17 @@ def recoveryTask(last_task):
     move_side = ''
     log = 'failed'
     if ltName == "axis correction **Corner**" or ltName == "axis correction **Suave**": #if last task was axis correction, then:
-        if ltMoveSide == "right": #if last task side was right, then:
-            motors.move_tank(1000,-200,200)
-        if ltMoveSide == "left": #if last task side was left, then:
-            motors.move_tank(1000,200,-200)
+        print(isMoveSide)
+        if isMoveSide == "right": #if last task side was right, then:
+            while se.reflection() > 40:
+                motors.start_tank(-200, 200)
+            motors.stop_tank()
+        if isMoveSide == "left": #if last task side was left, then:
+            while sd.reflection() > 40:
+                motors.start_tank(200, -200)
+            motors.stop_tank()
+    if ltName == "gap":
+        motors.move_tank(2000,-200,-200)
     if ltName == "intersectionSolver": #if last task was intersection solver, then:
         if ltMoveSide == "right": #if last task side was right, then:
             motors.move_tank(1000,200,-200)
@@ -471,7 +479,7 @@ if __name__ == "__main__":
                             motors.move_tank(1800,200,200)
                             updateLog(["gap", 'None', "succeded"]) #it's a gap(uptade the log to a gap case)
                         else: #if the last task wasn't proportional align(something is wrong), then:
-                            updateLog(recoveryTask(logs[-1])) #shit, lets try recovery task
+                            updateLog(recoveryTask()) #shit, lets try recovery task
                     else: #else, if the robot isn't in line and isn't seeing everything white, then:
                         motors.stop_tank() #stop the motors from moving
                         if se_value < 30 and sd_value < 30: #if both right-left sensors are seeing black, then:
