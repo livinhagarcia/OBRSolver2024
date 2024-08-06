@@ -247,5 +247,8 @@ def main():
         robo.back_goTo(1155,1155)
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
+        wait(1000)
+        robo.motors.move_tank(1000,500,500)
+
     print(robo.map.points)
 main()
