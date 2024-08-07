@@ -4,7 +4,7 @@ from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
 from pybricks.robotics import DriveBase
 from pybricks.tools import wait, StopWatch
 
-hub = PrimeHub(observe_channels=[1])
+hub = PrimeHub(broadcast_channel=2, observe_channels=[1])
 
 class MotorPair:
     def __init__(self, port1, port2):
@@ -62,10 +62,26 @@ class Claw:
         self.up()
 
 claw = Claw(Port.A, Port.C, Port.D)
-
+exec = False
 while True:
     hub.display.pixel(1,1)
     hub.light.on(Color.RED)
+
+    if hub.buttons.pressed() == {Button.LEFT}:
+        hub.ble.broadcast(1)
+        wait(1000)
+        hub.ble.broadcast(0) #reset
+        exec = True
+    if hub.buttons.pressed() == {Button.RIGHT}:
+        hub.ble.broadcast(2)
+        wait(1000)
+        hub.ble.broadcast(0) #reset
+    if exec :    
+        if hub.buttons.pressed() == {Button.LEFT} or hub.buttons.pressed() == {Button.RIGHT}:
+            hub.ble.broadcast(3)
+            print("hereeeeeeeee")
+            wait(1000)
+            hub.ble.broadcast(0) #reset
 
     inf = hub.ble.observe(1)
     print(inf)
