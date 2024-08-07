@@ -322,6 +322,8 @@ class Intersection:
 #creating recovery task function
 def recoveryTask():
     global logs
+    timer = StopWatch()
+    timeout = 3000
     last_task = logs[-1]
     recoveryTaskDisplay() #displaying an "R" to the hub screen
     ltName = last_task[0] #defining a variable for the last task name
@@ -337,12 +339,13 @@ def recoveryTask():
     log = 'failed'
     if ltName == "axis correction **Corner**" or ltName == "axis correction **Suave**": #if last task was axis correction, then:
         print(isMoveSide)
+        timer.reset()
         if isMoveSide == "right": #if last task side was right, then:
-            while se.reflection() > 40:
+            while se.reflection() > 40 or timer.time() < timeout:
                 motors.start_tank(-200, 200)
             motors.stop_tank()
         if isMoveSide == "left": #if last task side was left, then:
-            while sd.reflection() > 40:
+            while sd.reflection() > 40 or timer.time() < timeout:
                 motors.start_tank(200, -200)
             motors.stop_tank()
     if ltName == "gap":
