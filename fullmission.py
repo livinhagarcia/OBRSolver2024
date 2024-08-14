@@ -323,11 +323,13 @@ def FindSafe(areas):
     return False
 
 def resgate():
-    robo.back_goTo(1500,1155)
+    robo.motors.move_tank(1000,250,250)
+    robo.back_goTo(770,770)
     hub.ble.broadcast(0) #claw pickup
     wait(1000)
     hub.ble.broadcast(2) #claw reset
     wait(2000)
+    robo.back_goTo(1155,1155)
     safe = FindSafe(AreaResgate)
     if not safe:
         robo.goTo(out[0], out[1])
@@ -339,7 +341,7 @@ def resgate():
         wait(1000)
         hub.ble.broadcast(2) #claw reset
         wait(2000)
-        robo.goTo(1155,1000)
+        robo.goTo(1155,1155)
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
         wait(1000)
@@ -646,10 +648,10 @@ mode = ""
 
 ListaPontos = [[385,385],[1155,385],[1925,385]]
 #Saídas = [[385,0],[1155,0],[1925,0],[385,2310][1155,2310],[1925,2310],[0,385],[0,1155],[0,1925],[2310,385],[2310,1155],[2310,1925]]
-PontoInicial = [1925,385,0]
+PontoInicial = [385,385,0]
 Center = [1155,1155]
-AreaResgate = [[385,385],[770, 1925],[1925,1925],[1925,385]]
-out = [385,385,-90]
+AreaResgate = [[385,385],[385,1925],[1925,1925],[1925,385]]
+out = [1925,1925,90]
 safe = None
 
 robo = Robot(motors, None, [PontoInicial[0],PontoInicial[1], 0])
@@ -721,4 +723,3 @@ if __name__ == "__main__":
         data = robo.hub.ble.observe(2)
         if(data == 3):
             break
-             
