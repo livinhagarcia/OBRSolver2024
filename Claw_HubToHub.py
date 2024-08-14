@@ -11,6 +11,8 @@ class MotorPair:
         self.motor1 = Motor(port1)
         self.motor2 = Motor(port2)
         self.timer = StopWatch()
+        self.motor1.control.limits(1000,2000,200)
+        self.motor2.control.limits(1000,2000,200)
     def move_angle(self,amount,speed1,speed2, timeout = 1000):
         self.motor1.reset_angle(0)
         self.motor2.reset_angle(0)
@@ -40,10 +42,10 @@ class Claw:
         self.clawPair = MotorPair(P1,P2)
         self.hand = Motor(Hand)
     def up(self):
-        self.clawPair.move_tank(1000,-200,200)
+        self.clawPair.move_tank(3000,-4000,4000)
         print("up")
     def down(self):
-        self.clawPair.move_tank(700,500,-500)
+        self.clawPair.move_tank(3000,4000,-4000)
         print("down")
     def open(self):
         self.hand.run_angle(-500,20)
@@ -65,7 +67,6 @@ claw = Claw(Port.A, Port.C, Port.D)
 exec = False
 while True:
     hub.display.pixel(1,1)
-    hub.light.on(Color.RED)
 
     if hub.buttons.pressed() == {Button.LEFT}:
         hub.ble.broadcast(1)
@@ -86,6 +87,7 @@ while True:
     inf = hub.ble.observe(1)
     print(inf)
     if inf == 0:
+        claw.clawPair.motor1.settings()
         claw.pickUp()
 
     elif inf == 1:
