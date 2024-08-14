@@ -324,6 +324,7 @@ def FindSafe(areas):
 
 def resgate():
     robo.motors.move_tank(1000,250,250)
+    robo.goTo(660,660)
     robo.back_goTo(770,770)
     hub.ble.broadcast(0) #claw pickup
     wait(1000)
@@ -345,7 +346,7 @@ def resgate():
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
         wait(1000)
-        robo.motors.move_tank(1000,500,500)
+        robo.motors.move_tank(1000,250,250)
     print(robo.map.points)
 
 
@@ -608,7 +609,7 @@ def desviarObs(lado = 'right'):
 
 #creating a function to detect if the robot is in the rescue zone
 def checarResgate(u_value):
-    if u_value > 800 and u_value < 930:
+    if u_value > 600 and u_value < 930:
         motors.stop_tank()
         hub.speaker.beep()
         motors.move_tank(3000,250,250)
