@@ -316,14 +316,14 @@ def FindSafe(areas):
         robo.pointToaPoint(area[0], area[1])
         wait(2000)
         u_value = u2.distance()
-        if u_value > 50 and u_value < 300:
+        if u_value > 50 and u_value < 400:
             hub.speaker.beep
             print('Safe on:' + str(area))
             return area
     return False
 
 def resgate():
-    robo.motors.move_tank(1000,250,250)
+    robo.motors.move_tank(500,250,250)
     robo.goTo(660,660)
     robo.back_goTo(770,770)
     hub.ble.broadcast(0) #claw pickup
@@ -609,7 +609,7 @@ def desviarObs(lado = 'right'):
 
 #creating a function to detect if the robot is in the rescue zone
 def checarResgate(u_value):
-    if u_value > 600 and u_value < 930:
+    if u_value > 350 and u_value < 930:
         motors.stop_tank()
         hub.speaker.beep()
         motors.move_tank(3000,250,250)
@@ -677,7 +677,7 @@ if __name__ == "__main__":
             display.off()#turn off the display to show that the mode has restarted
             mode = ""#set the mode to blank after the calibrate is done
         if mode == "execution": #if the actual mode is execution, then:
-            executionDisplay() #set the display to show an "E"
+            executionDisplay() #set the display to show an "E"w
             u_value = u2.distance() # constantly get the distance value
             while checarResgate(u_value) == False and robo.hub.ble.observe(2) != 3: #while the robot isn't in rescue zone, then:
                 print(u_value)
