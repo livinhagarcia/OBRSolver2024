@@ -3,8 +3,9 @@ from pybricks.pupdevices import Motor, ColorSensor, UltrasonicSensor, ForceSenso
 from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
 from pybricks.robotics import DriveBase
 from pybricks.tools import wait, StopWatch
+import umath as math
 
-hub = PrimeHub()#defining the actual hub object
+hub = PrimeHub(broadcast_channel=1, observe_channels=[2])
 display = hub.display#defining the display object
 yaw = hub.imu#defining the angle object of the hub
 
@@ -130,6 +131,225 @@ class MotorPair:
         self.motor1.hold()
         self.motor2.hold()
 
+class myMap:
+    def __init__ (self,start_pos):
+        self.start_pos = start_pos
+        pos = [self.start_pos[0], self.start_pos[1], self.start_pos[2]]
+        self.points = [pos]
+
+    def addPoint(self,point):
+        pos = [point[0], point[1], point[2]]
+        if not pos in self.points:
+            self.points += [pos]
+
+class Robot:
+    def __init__ (self,motors,force_sensor_port = None,position = [0,0,0]):
+        self.position = position
+        self.map = myMap(self.position)
+        self.motors = motors
+        self.hub = PrimeHub(broadcast_channel=1, observe_channels=[2])
+        self.hub.imu.reset_heading(0)
+        if force_sensor_port:
+            self.force_sensor = ForceSensor(force_sensor_port)
+     
+    def pointToaPoint(self,x,y):
+        x = int( x + (-1*self.position[0]) )
+        y = int( y + (-1*self.position[1]) )
+        # dist = math.sqrt(x**2 + y**2)
+        if x != 0 and y > 0:
+            self.pointTo(int(math.degrees(math.atan(x/y))))
+        elif x > 0 and y < 0:
+            self.pointTo(90 + int(abs(math.degrees(math.atan(y/x)))))
+        elif x < 0 and y < 0:
+            self.pointTo(-90 - int(abs(math.degrees(math.atan(y/x)))))
+        return 1
+
+    def pointTo(self, degrees, precision = 3):
+        dir = self.position[2]
+        # print(range(degrees - precision, degrees + precision))
+        if(dir < degrees):
+            while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
+                print(self.hub.imu.heading())
+                self.motors.start_tank(-200,200)
+            self.motors.stop_tank()
+        else:
+            while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
+                self.motors.start_tank(200,-200)
+            self.motors.stop_tank()
+        print('turning ' + str(degrees) + ' degrees')
+        self.position[2] = self.hub.imu.heading()
+        self.map.points[-1][2] = self.position[2]
+    
+    def back_pointTo(self, degrees, precision = 3):
+        dir = self.position[2]
+        if degrees < 0:
+            degrees += 180
+        else:
+            degrees -= 180
+        # degrees = degrees * -1 
+        # print(range(degrees - precision, degrees + precision))
+        if(dir < degrees):
+            while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
+                print(self.hub.imu.heading())
+                self.motors.start_tank(-200,200)
+            self.motors.stop_tank()
+        else:
+            while self.hub.imu.heading() < (degrees - precision) or self.hub.imu.heading() > (degrees + precision):
+                self.motors.start_tank(200,-200)
+            self.motors.stop_tank()
+        print('turning ' + str(degrees) + ' degrees')
+        self.position[2] = self.hub.imu.heading()
+        self.map.points[-1][2] = self.position[2]
+
+
+    def calibrateDirTo(self, goal, precision = 1):
+        dir = self.position[2]
+        if dir < goal:
+            while not self.hub.imu.heading() == goal:
+                real_value = self.hub.imu.heading()
+                diff = goal - real_value
+                print(str(real_value) + " missing " + str(diff) + " to turn ")
+        else:
+            while not self.hub.imu.heading() == goal:
+                real_value = self.imu.heading()
+                diff = real_value - goal
+                print(str(real_value) + " missing " + str(diff) + " to turn ")
+        real_value = self.hub.imu.heading()
+        print('dir calibrated to ' + str(real_value) + ' degrees, the goal was ' + str(goal))
+        self.position[2] = self.hub.imu.heading()
+        self.map.points[-1][2] = self.position[2]
+
+    def moveX(self,q):
+        if q:
+            if q > 0:
+                self.pointTo(90)
+            else:
+                self.pointTo(-90)
+            self.motors.move_angle(abs(q), 200, 200)
+            print('moving ' + str(q) + ' on X')
+            self.position[0] += q
+            self.map.addPoint(self.position)
+
+    def moveY(self,q):
+        if q :
+            if q > 0:
+                self.pointTo(0)
+            else:
+                self.pointTo(178)
+            self.motors.move_angle(abs(q),200, 200)
+            print('moving ' + str(q) + ' on Y')
+            self.position[1] += q
+            self.map.addPoint(self.position)
+    
+    def back_goTo(self,x,y):
+        x = int( x + (-1*self.position[0]) )
+        y = int( y + (-1*self.position[1]) )
+        dist = math.sqrt(x**2 + y**2)
+        if x != 0 and y > 0:
+            self.back_pointTo(int(math.degrees(math.atan(x/y))))
+        elif x > 0 and y < 0:
+            self.back_pointTo(90 + int(abs(math.degrees(math.atan(y/x)))))
+        elif x < 0 and y < 0:
+            self.back_pointTo(-90 - int(abs(math.degrees(math.atan(y/x)))))
+        elif x == 0 and y != 0:
+            if y > 0:
+                self.back_pointTo(0)
+            else:
+                self.back_pointTo(180)
+        elif x != 0 and y == 0:
+            if x > 0:
+                self.back_pointTo(90)
+            else:
+                self.back_pointTo(-90)
+        else:
+            return 0
+        self.motors.move_angle(dist,-200, -200)
+        self.position[0] += x
+        self.position[1] += y
+        self.map.addPoint(self.position)
+        return 1
+
+    def goTo(self,x,y):
+        x = int( x + (-1*self.position[0]) )
+        y = int( y + (-1*self.position[1]) )
+        dist = math.sqrt(x**2 + y**2)
+        if x != 0 and y > 0:
+            self.pointTo(int(math.degrees(math.atan(x/y))))
+        elif x > 0 and y < 0:
+            self.pointTo(90 + int(abs(math.degrees(math.atan(y/x)))))
+        elif x < 0 and y < 0:
+            self.pointTo(-90 - int(abs(math.degrees(math.atan(y/x)))))
+        elif x == 0 and y != 0:
+            self.moveY(y)
+            return 1
+        elif x != 0 and y == 0:
+            self.moveX(x)
+            return 1
+        else:
+            return 0
+        self.motors.move_angle(dist,200, 200)
+        self.position[0] += x
+        self.position[1] += y
+        self.map.addPoint(self.position)
+        return 1
+
+    def doRoute(self, pointlist, goandback = False, back = False):
+        for point in pointlist:
+            if back:
+                self.back_goTo(point[0],point[1])    
+            else:
+                self.goTo(point[0],point[1])
+        if goandback == True:
+            lista = self.map.points.copy()
+            lista.reverse()
+            self.doRoute(lista, False, back)
+
+def FindSafe(areas):
+    
+    pos_areas = areas
+    if [PontoInicial[0],PontoInicial[1]] in pos_areas:
+        print("estou aqui")
+        pos_areas.pop(pos_areas.index([PontoInicial[0],PontoInicial[1]]))
+    if [out[0],out[1]] in pos_areas:
+        pos_areas.pop(pos_areas.index([out[0],out[1]]))
+    for area in pos_areas:
+        robo.pointToaPoint(area[0], area[1])
+        wait(2000)
+        u_value = u2.distance()
+        if u_value > 50 and u_value < 400:
+            hub.speaker.beep
+            print('Safe on:' + str(area))
+            return area
+    return False
+
+def resgate():
+    robo.motors.move_tank(500,250,250)
+    robo.goTo(660,660)
+    robo.back_goTo(770,770)
+    hub.ble.broadcast(0) #claw pickup
+    wait(1000)
+    hub.ble.broadcast(2) #claw reset
+    wait(2000)
+    robo.back_goTo(1155,1155)
+    safe = FindSafe(AreaResgate)
+    if not safe:
+        robo.goTo(out[0], out[1])
+        robo.pointTo(out[2])
+    else:
+        robo.back_goTo(safe[0], safe[1])
+        wait(3000)
+        hub.ble.broadcast(1) #claw release
+        wait(1000)
+        hub.ble.broadcast(2) #claw reset
+        wait(2000)
+        robo.goTo(1155,1155)
+        robo.goTo(out[0], out[1])
+        robo.pointTo(out[2])
+        wait(1000)
+        robo.motors.move_tank(1000,250,250)
+    print(robo.map.points)
+
+
 #creating update log function
 def updateLog(log):
     global logs
@@ -140,7 +360,8 @@ def updateLog(log):
         return True
 
 #creating the axis correction function
-def axis_correction(last_move, set_point_c = 40, set_point_s = 75):
+def axis_correction(last_move, set_point_c = 25, set_point_s = 45, timeout_s = 4200, timeout_c = 2200):
+    timer = StopWatch()
     axisCorrectionDisplay()
     global corner
     global logs 
@@ -152,12 +373,20 @@ def axis_correction(last_move, set_point_c = 40, set_point_s = 75):
     if corner >= 3:
         motors.stop_tank()
         if sd.reflection() < set_point_s:
+            timer.reset()
             while sd.reflection() < set_point_s:
                 motors.start_tank(-150,0)
+                if timer.time() >= timeout_s:
+                    motors.stop_tank()
+                    return ["axis correction **Suave**", 'right', 'failed']
             move_side = 'right'
         elif se.reflection() < set_point_s : 
+            timer.reset()
             while se.reflection() < set_point_s:
                 motors.start_tank(0,-150)
+                if timer.time() >= timeout_s:
+                    motors.stop_tank()
+                    return ["axis correction **Suave**",'left','failed']
             move_side = 'left'
         if corner == 5:
             corner == 0
@@ -165,14 +394,22 @@ def axis_correction(last_move, set_point_c = 40, set_point_s = 75):
         log = 'succeded'
     else:
         if sd.reflection() > se.reflection():
+            timer.reset()
             while sd.reflection() > set_point_c:
                 motors.start_tank(300,-50)
                 move_side = 'right'
+                if timer.time() >= timeout_c:
+                    corner += 1
+                    return ["axis correction **Corner**", move_side, "failed"]
             corner += 1
         else:
+            timer.reset()
             while se.reflection() > set_point_c:
                 motors.start_tank(-50,300)
                 move_side = 'left'
+                if timer.time() >= timeout_c:
+                    corner += 1
+                    return ["axis correction **Corner**", move_side, "failed"]
             corner += 1
         name = "axis correction **Corner**"
         log = 'succeded'
@@ -321,9 +558,10 @@ class Intersection:
 
 #creating recovery task function
 def recoveryTask():
+    print("recovery task")
     global logs
     timer = StopWatch()
-    timeout = 3000
+    timeout = 1600
     last_task = logs[-1]
     recoveryTaskDisplay() #displaying an "R" to the hub screen
     ltName = last_task[0] #defining a variable for the last task name
@@ -339,14 +577,25 @@ def recoveryTask():
     log = 'failed'
     if ltName == "axis correction **Corner**" or ltName == "axis correction **Suave**": #if last task was axis correction, then:
         print(isMoveSide)
-        timer.reset()
         if isMoveSide == "right": #if last task side was right, then:
-            while se.reflection() > 40 or timer.time() < timeout:
+            timer.reset()
+            while se.reflection() > 40:
                 motors.start_tank(-200, 200)
+                if timer.time() >= timeout:
+                    motors.stop_tank()
+                    return [name, "left", "failed"]
+            move_side = "left"
+            log = "succeded"
             motors.stop_tank()
         if isMoveSide == "left": #if last task side was left, then:
-            while sd.reflection() > 40 or timer.time() < timeout:
+            timer.reset()
+            while sd.reflection() > 40:
                 motors.start_tank(200, -200)
+                if timer.time() >= timeout:
+                    motors.stop_tank()
+                    return [name,"right","failed"]
+            move_side = "right"
+            log = "succeded"
             motors.stop_tank()
     if ltName == "gap":
         motors.move_tank(2000,-200,-200)
@@ -392,25 +641,12 @@ def desviarObs(lado = 'right'):
 
 #creating a function to detect if the robot is in the rescue zone
 def checarResgate(u_value):
-    if u_value > 900 and u_value < 930:
+    if u_value > 350 and u_value < 930:
         motors.stop_tank()
         hub.speaker.beep()
         motors.move_tank(3000,250,250)
-        motors.move_tank(1500,-250,250)
-        motors.move_tank(1000,250,250)
-        wait(2000)
-        u_value = u2.distance()
-        print(u_value)
-        #Mover motor esquerdo para frente fazendo com q o robo gire 90 graus
-        if u_value > 500 and u_value < 800:
-            hub.speaker.beep()
-            hub.display.pixel(4,4)
-            print("resgate!!!!")
-            return True
-        else:
-            motors.move_tank(1000,-250,-250)
-            motors.move_tank(1500,250,-250)
-            motors.move_tank(2250,-250,-250)
+        resgate()    
+        return True
     elif u_value < 100:
         hub.speaker.beep()
         motors.stop_tank()
@@ -443,13 +679,27 @@ corner = 0
 #creating the mode variable to use it later to choose the robot mode between calibrate mode and execution mode 
 mode = ""
 
+ListaPontos = [[385,385],[1155,385],[1925,385]]
+#Saídas = [[385,0],[1155,0],[1925,0],[385,2310][1155,2310],[1925,2310],[0,385],[0,1155],[0,1925],[2310,385],[2310,1155],[2310,1925]]
+PontoInicial = [385,385,0]
+Center = [1155,1155]
+AreaResgate = [[385,385],[385,1925],[1925,1925],[1925,385]]
+out = [1925,1925,90]
+safe = None
+
+robo = Robot(motors, None, [PontoInicial[0],PontoInicial[1], 0])
+
+data = None
 #main loop
 if __name__ == "__main__":
     while True:
-        if hub.buttons.pressed() == {Button.LEFT}: #if the left button were pressed, start the execution mode
+        data = robo.hub.ble.observe(2)
+        if hub.buttons.pressed() == {Button.LEFT} or data == 1: #if the left button were pressed, start the execution mode
             mode = "execution"
-        if hub.buttons.pressed() == {Button.RIGHT}: #if the right button were pressed, start the calibrate mode
+            data = None
+        if hub.buttons.pressed() == {Button.RIGHT} or data == 2: #if the right button were pressed, start the calibrate mode
             mode = "calibrate"
+            data = None
         if mode == "calibrate": #if the actual mode is calibrate, then:
             print("------calibrando------") #debug
             leftValues = i.getGreenValues("left") #set the variable leftValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the left sensor)
@@ -459,9 +709,10 @@ if __name__ == "__main__":
             display.off()#turn off the display to show that the mode has restarted
             mode = ""#set the mode to blank after the calibrate is done
         if mode == "execution": #if the actual mode is execution, then:
-            executionDisplay() #set the display to show an "E"
+            executionDisplay() #set the display to show an "E"w
             u_value = u2.distance() # constantly get the distance value
-            while checarResgate(u_value) == False: #while the robot isn't in rescue zone, then:
+            while checarResgate(u_value) == False and robo.hub.ble.observe(2) != 3: #while the robot isn't in rescue zone, then:
+                print(u_value)
                 print(logs[-1],corner) #debug for showing the logs every second 
                 sensor_values = str(se.reflection()) + ',' + str(sc.reflection()) + ',' + str(sd.reflection()) #sets a variable to show the updated sensor values
                 print(sensor_values) #debug for showing the values of the sensor every second
@@ -497,7 +748,13 @@ if __name__ == "__main__":
                             else: #if the robot isn't in line, then:
                                 print('back until see black') #debug
                                 motors.move_tank(2000, -200, -200) #go back until see black
+                                corner = 0
                                 updateLog(axis_correction(logs[-1][0])) # do axis correction after it returns
                         else: #else, if both left-right are seeing a value higher then 30, then:
                             print('axis correction no branco') #debug
-                            updateLog(axis_correction(logs[-1][0])) #do axis correction 
+                            if se_value > 50 and sd_value > 50:
+                                updateLog(["Axis Correction no branco",move_side,log])
+                            updateLog(axis_correction(logs[-1][0])) #do axis correction
+        data = robo.hub.ble.observe(2)
+        if(data == 3):
+            break
