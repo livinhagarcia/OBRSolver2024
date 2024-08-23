@@ -555,7 +555,52 @@ class Intersection:
                 if sensor_e.v > valuesE[0][2] and sensor_e.v < valuesE[1][2]:
                     esquerda = True
         return [esquerda, direita]
-
+#creating a class for the finish line check and the red calibration
+class FinishLine:
+    def __init__(self, se, sd):
+        self.sd = sd
+        self.se = se
+    def getRedValues(self,side):
+        hsv_min = [0,0,0]
+        hsv_max = [0,0,0]
+        hsv_med = [0,0,0]
+        if side == 'left':
+            sensor = self.se
+        elif side == "right":
+            sensor = self.sd
+        for x in range(200):
+            wait(10)
+            if side == "right":
+                calibrateRightDisplay(int((x+1)/2))
+            if side == "left":
+                calibrateLeftDisplay(int((x+1)/2))
+            hsv_obj = sensor.hsv()
+            hsv_med[0] += hsv_obj.h
+            hsv_med[1] += hsv_obj.s
+            hsv_med[2] += hsv_obj.v
+            print(hsv_med)
+        for i in range(3):
+            hsv_med[i] = hsv_med[i]/200
+            hsv_min[i] = hsv_med[i] - 20
+            hsv_max[i] = hsv_med[i] + 20  
+            # if hsv_obj.h < hsv_min[0] or hsv_min[0] == 0 :
+            #     hsv_min[0] = hsv_obj.h
+            # if hsv_obj.s < hsv_min[1] or hsv_min[1] == 0 :
+            #     hsv_min[1] = hsv_obj.s
+            # if hsv_obj.v < hsv_min[2] or hsv_min[2] == 0 :
+            #     hsv_min[2] = hsv_obj.v
+            # if hsv_obj.h > hsv_max[0]:
+            #     hsv_max[0] = hsv_obj.h
+            # if hsv_obj.s > hsv_max[1]:
+            #     hsv_max[1] = hsv_obj.s
+            # if hsv_obj.v > hsv_max[2]:
+            #     hsv_max[2] = hsv_obj.v
+            
+            wait(50)
+        hsv_values = [hsv_min, hsv_max]
+        print(hsv_values)
+        return hsv_values
+   
 #creating recovery task function
 def recoveryTask():
     print("recovery task")
@@ -663,11 +708,13 @@ motors = MotorPair(Port.A,Port.B)
 
 # defining sensors
 green_values = [[[144.18, 59.945, 52.26], [184.18, 99.945, 92.26]], [[146.77, 56.265, 53.105], [186.77, 96.265, 93.105]]]
+red_values = [[0,0],[0,0]]
 u2 = UltrasonicSensor(Port.E)
 sc = ColorSensor(Port.D)
 sd = ColorSensor(Port.C)
 se = ColorSensor(Port.F)
 i = Intersection(se, sd, green_values)
+f = FinishLine(se, sd)
 
 #creating the log list and the corner variable
 name = 'Beginning run'
@@ -701,13 +748,24 @@ if __name__ == "__main__":
             mode = "calibrate"
             data = None
         if mode == "calibrate": #if the actual mode is calibrate, then:
-            print("------calibrando------") #debug
-            leftValues = i.getGreenValues("left") #set the variable leftValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the left sensor)
-            rightValues = i.getGreenValues("right") #set the variable rightValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the right sensor)
-            green_values = [leftValues, rightValues] #update the green_values array to the new values got with the intersection object 
-            print(green_values)#debug
-            display.off()#turn off the display to show that the mode has restarted
-            mode = ""#set the mode to blank after the calibrate is done
+            wait(500)
+            print(data) 
+            if hub.buttons.pressed() == {Button.RIGHT} or data == 2:
+                print("------calibrando verde------") #debug
+                leftValues = i.getGreenValues("left") #set the variable leftValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the left sensor)
+                rightValues = i.getGreenValues("right") #set the variable rightValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the right sensor)
+                green_values = [leftValues, rightValues] #update the green_values array to the new values got with the intersection object 
+                print(green_values)#debug
+                display.off()#turn off the display to show that the mode has restarted
+                mode = ""#set the mode to blank after the calibrate is done
+            if hub.buttons.pressed() == {Button.LEFT} or data == 1:
+                print("------calibrando vermelho------")
+                leftValues = f.getRedValues("left")
+                rightValues = f.getRedValues("right")
+                red_values = [leftValues,rightValues]
+                print(red_values)
+                display.off()
+                mode = ""
         if mode == "execution": #if the actual mode is execution, then:
             executionDisplay() #set the display to show an "E"w
             u_value = u2.distance() # constantly get the distance value
