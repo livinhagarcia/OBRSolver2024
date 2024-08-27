@@ -220,25 +220,25 @@ class Robot:
         self.map.points[-1][2] = self.position[2]
 
     def moveX(self,q):
-        q = int(q * 25.66)
+        d = int(q * 25.66)
         if q:
             if q > 0:
                 self.pointTo(90)
             else:
                 self.pointTo(-90)
-            self.motors.move_angle(abs(q), 200, 200)
+            self.motors.move_angle(abs(d), 200, 200)
             print('moving ' + str(q) + ' on X')
             self.position[0] += q
             self.map.addPoint(self.position)
 
     def moveY(self,q):
-        q = int(q * 25.66)
+        d = int(q * 25.66)
         if q :
             if q > 0:
                 self.pointTo(0)
             else:
                 self.pointTo(178)
-            self.motors.move_angle(abs(q),200, 200)
+            self.motors.move_angle(abs(d),200, 200)
             print('moving ' + str(q) + ' on Y')
             self.position[1] += q
             self.map.addPoint(self.position)
@@ -696,7 +696,7 @@ corner = 0
 mode = ""
 
 #Saídas = [[385,0],[1155,0],[1925,0],[385,2310][1155,2310],[1925,2310],[0,385],[0,1155],[0,1925],[2310,385],[2310,1155],[2310,1925]]
-PontoInicial = [15,15,0]
+PontoInicial = [45,15,0]
 Center = [45,45]
 AreaResgate = [[15,15],[15,75],[75,15],[75,75]]
 out = [75,45,90]
