@@ -231,17 +231,12 @@ def FindSafe(areas):
     return False
 
 safe = None
-ListaPontos = [[385,385],[1155,385],[1925,385]]
-#Saídas = [[385,0],[1155,0],[1925,0],[385,2310][1155,2310],[1925,2310],[0,385],[0,1155],[0,1925],[2310,385],[2310,1155],[2310,1925]]
-PontoInicial = [1925,385,0]
-Center = [1155,1155]
-AreaResgate = [[385,385],[770, 1925],[1925,1925],[1925,385]]
-out = [385,385,-90]
-robo = Robot(Port.A, Port.B, None, [PontoInicial[0],PontoInicial[1], 0])
-# pontomeio = [385,385]
-# lista_de_pontos_iniciais[[0,0],[0,1]]
-# robo = Robot(Port.A, Port.B, None, [385,0,0])
-# robo.goTo(pontomeio[0],pontomeio[1])
+PontoInicial = [45,15,0]
+Center = [45,45]
+AreaResgate = [[15,15],[15,75],[75,15],[75,75]]
+out = [75,45,90]
+safe = None
+robo = Robot(motors, None, [PontoInicial[0],PontoInicial[1], 0])
 
 def resgate():
     robo.motors.move_tank(500,250,250)
