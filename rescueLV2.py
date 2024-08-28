@@ -243,12 +243,15 @@ robo = Robot(Port.A, Port.B, None, [PontoInicial[0],PontoInicial[1], 0])
 # robo = Robot(Port.A, Port.B, None, [385,0,0])
 # robo.goTo(pontomeio[0],pontomeio[1])
 
-def main():
-    robo.back_goTo(1500,1155)
+def resgate():
+    robo.motors.move_tank(500,250,250)
+    robo.goTo(660,660)
+    robo.back_goTo(770,770)
     hub.ble.broadcast(0) #claw pickup
     wait(1000)
     hub.ble.broadcast(2) #claw reset
     wait(2000)
+    robo.back_goTo(1155,1155)
     safe = FindSafe(AreaResgate)
     if not safe:
         robo.goTo(out[0], out[1])
@@ -260,11 +263,10 @@ def main():
         wait(1000)
         hub.ble.broadcast(2) #claw reset
         wait(2000)
-        robo.goTo(1155,1000)
+        robo.goTo(1155,1155)
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
         wait(1000)
-        robo.motors.move_tank(1000,500,500)
-
+        robo.motors.move_tank(1000,250,250)
     print(robo.map.points)
-main()
+
