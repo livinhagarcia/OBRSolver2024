@@ -224,7 +224,7 @@ def FindSafe(areas):
         robo.pointToaPoint(area[0], area[1])
         wait(2000)
         u_value = u2.distance()
-        if u_value > 50 and u_value < 350:
+        if u_value > 50 and u_value < 400:
             hub.speaker.beep
             print('Safe on:' + str(area))
             return area
