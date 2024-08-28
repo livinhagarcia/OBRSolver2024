@@ -240,13 +240,13 @@ robo = Robot(motors, None, [PontoInicial[0],PontoInicial[1], 0])
 
 def resgate():
     robo.motors.move_tank(500,250,250)
-    robo.goTo(660,660)
-    robo.back_goTo(770,770)
+    robo.goTo(25,25)
+    robo.back_goTo(30,30)
     hub.ble.broadcast(0) #claw pickup
     wait(1000)
     hub.ble.broadcast(2) #claw reset
     wait(2000)
-    robo.back_goTo(1155,1155)
+    robo.back_goTo(Center)
     safe = FindSafe(AreaResgate)
     if not safe:
         robo.goTo(out[0], out[1])
@@ -258,10 +258,9 @@ def resgate():
         wait(1000)
         hub.ble.broadcast(2) #claw reset
         wait(2000)
-        robo.goTo(1155,1155)
+        robo.goTo(Center)
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
         wait(1000)
         robo.motors.move_tank(1000,250,250)
     print(robo.map.points)
-
