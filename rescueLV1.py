@@ -46,8 +46,8 @@ class MotorPair:
         self.motor1.run(speed1)
         self.motor2.run(-(speed2))           
     def stop_tank(self):
-        self.motor1.run(0)
-        self.motor2.run(0)
+        self.motor1.hold()
+        self.motor2.hold()
 
 class myMap:
     def __init__ (self,start_pos):
