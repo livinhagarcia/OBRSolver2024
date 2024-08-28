@@ -211,16 +211,23 @@ class Robot:
             self.doRoute(lista, False, back)
 
 def FindSafe(areas):
-    
+    global PontoInicial
     pos_areas = areas
+    print(PontoInicial)
     if [PontoInicial[0],PontoInicial[1]] in pos_areas:
+        print("plmrdedeus")
         pos_areas.pop(pos_areas.index([PontoInicial[0],PontoInicial[1]]))
+    else:
+        print(PontoInicial)
+        print([PontoInicial[0],PontoInicial[1]])
+        print('N TA HEIN')
     if [out[0],out[1]] in pos_areas:
         pos_areas.pop(pos_areas.index([out[0],out[1]]))
     for area in pos_areas:
+        print("indo para:" + str(area))
         robo.goTo(area[0], area[1])
         leitura = sc.hsv()
-        print(sc.hsv())
+        # print(sc.hsv())
         if [leitura.h,leitura.s,leitura.v] >= [155,80,60] and [leitura.h,leitura.s,leitura.v] <= [175,100,85]:
             hub.speaker.beep()
             robo.motors.stop_tank()
