@@ -707,3 +707,70 @@ robo = Robot(motors, None, [PontoInicial[0],PontoInicial[1], 0])
 
 #main loop
 if __name__ == "__main__":
+    while True:
+        if hub.buttons.pressed() == {Button.LEFT} : #if the left button were pressed, start the execution mode
+            mode = "execution"
+            
+        if hub.buttons.pressed() == {Button.RIGHT} : #if the right button were pressed, start the calibrate mode
+            mode = "calibrate"
+            
+        if mode == "calibrate": #if the actual mode is calibrate, then:
+            print("------calibrando------") #debug
+            leftValues = i.getGreenValues("left") #set the variable leftValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the left sensor)
+            rightValues = i.getGreenValues("right") #set the variable rightValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the right sensor)
+            green_values = [leftValues, rightValues] #update the green_values array to the new values got with the intersection object 
+            print(green_values)#debug
+            display.off()#turn off the display to show that the mode has restarted
+            mode = ""#set the mode to blank after the calibrate is done
+        if mode == "execution": #if the actual mode is execution, then:
+            executionDisplay() #set the display to show an "E"w
+            u_value = u2.distance() # constantly get the distance value
+            while checarResgate(u_value) == False: #while the robot isn't in rescue zone, then:
+                print(u_value)
+                print(logs[-1],corner) #debug for showing the logs every second 
+                sensor_values = str(se.reflection()) + ',' + str(sc.reflection()) + ',' + str(sd.reflection()) #sets a variable to show the updated sensor values
+                print(sensor_values) #debug for showing the values of the sensor every second
+                u_value = u2.distance() #constantly get the distance value
+                se_value = se.reflection() #constantly get the left sensor value
+                sd_value = sd.reflection() #constantly get the right sensor value 
+                sc_value = sc.reflection() #constantly get the middle sensor value
+                errord = se_value - setPoint #constantly get the difference between the right value and the setPoint
+                errore = sd_value - setPoint #constantly get the difference between the left value and the setPoint
+                if se_value > 45 and sd_value > 45 and sc_value < 55: #if right-left sensors values are bigger then 50(if they are seeing white), and middle value is smaller then 55(if its seeing black), then(if the robot is in line):
+                    updateLog(proportionalAlign(errore,errord,1.2)) #do proportional align to correct little route errors
+                else: #else(if the robot isn't in line), then:
+                    valores_verdes = i.checkGreen(green_values) #constantly use the checkGreen function from the Intersection object to return if any of the right-left sensors are seeig green
+                    if valores_verdes[0] != False or valores_verdes[1] != False: #if any of the right-left sensors is seeing green, then:
+                        updateLog(i.intersectionSolver(valores_verdes))# do intersection solver
+                    if se_value > 80 and sd_value > 80 and sc_value > 80: #if every sensor is seeing white, then:
+                        if logs[-1][0] == 'proportional align': #if the last task was proportional align(if the robot were in line before seeing all white), then:
+                            motors.move_tank(1800,200,200)
+                            updateLog(["gap", 'None', "succeded"]) #it's a gap(uptade the log to a gap case)
+                        else: #if the last task wasn't proportional align(something is wrong), then:
+                            updateLog(recoveryTask()) #shit, lets try recovery task
+                    else: #else, if the robot isn't in line and isn't seeing everything white, then:
+                        motors.stop_tank() #stop the motors from moving
+                        if se_value < 30 and sd_value < 30: #if both right-left sensors are seeing black, then:
+                            motors.move_tank(2000, 200, 200) #move tank during 2000 milliseconds
+                            se_value = se.reflection() #update the left sensor value
+                            sd_value = sd.reflection() #update the right sensor value
+                            sc_value = sc.reflection() #update the middle sensor value
+                            errord = se_value - setPoint #update the errorD
+                            errore = sd_value - setPoint #update the errorE
+                            if se_value > 50 and sd_value > 50 and sc_value < 55: #if the robot is in line, then:
+                                updateLog(proportionalAlign(errore,errord,0.8)) #do proportional align 
+                            else: #if the robot isn't in line, then:
+                                print('back until see black') #debug
+                                motors.move_tank(1000, -200, -200) #go back until see black
+                                se_value = se.reflection() #update the left sensor value
+                                sd_value = sd.reflection() #update the right sensor value
+                                sc_value = sc.reflection() #update the middle sensor value
+                                if se_value < 50 or sd_value < 50 or sc_value > 55:
+                                    motors.move_tank(1000, -200, -200)
+                                corner = 0
+                                updateLog(axis_correction(logs[-1][0])) # do axis correction after it returns
+                        else: #else, if both left-right are seeing a value higher then 30, then:
+                            print('axis correction no branco') #debug
+                            if se_value > 50 and sd_value > 50:
+                                updateLog(["Axis Correction no branco",move_side,log])
+                            updateLog(axis_correction(logs[-1][0])) #do axis correction
