@@ -237,18 +237,23 @@ AreaResgate = [[385,385],[385,1925],[1925,1925],[1925,385]]
 out = [385,385,-90]
 sc = ColorSensor(Port.D)
 robo = Robot(Port.A, Port.B, None, PontoInicial)
-def main():
-    robo.goTo(1155,1155)
+def resgate():
+    print(PontoInicial)
+
+    robo.goTo(Center[0], Center[1])
+    
     safe = FindSafe(AreaResgate)
     if not safe:
+        robo.goTo(Center[0], Center[1])
         robo.goTo(out[0], out[1])
-        robo.pointTo(out[2])    
+        robo.pointTo(out[2])
+        wait(1000)
+        robo.motors.move_tank(1000,500,500)    
     else:
-        robo.back_goTo(1155,1155)
+        robo.back_goTo(Center[0], Center[1])
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
         wait(1000)
         robo.motors.move_tank(1000,500,500)
 
     print(robo.map.points)
-main()
