@@ -371,7 +371,7 @@ def updateLog(log):
         return True
 
 #creating the axis correction function
-def axis_correction(last_move, set_point_c = 25, set_point_s = 45, timeout_s = 4200, timeout_c = 2200):
+def axis_correction(last_move, set_point_c = 25, set_point_s = 45, timeout_s = 1000, timeout_c = 750):
     timer = StopWatch()
     axisCorrectionDisplay()
     global corner
@@ -640,31 +640,31 @@ def recoveryTask():
     ltName = last_task[0] #defining a variable for the last task name
     ltMoveSide = last_task[1] #defining a variable for the move side of the last task
     isMoveSide = ''
-    print(ltName)
+    print("ltName: " + str(ltName))
     if ltMoveSide == 'right':
         isMoveSide = 'left'
     if ltMoveSide == 'left':
         isMoveSide = 'right'
     name = 'recovery task'
-    move_side = ''
+    move_side = ltMoveSide
     log = 'failed'
-    if ltName == "axis correction **Corner**" or ltName == "axis correction **Suave**": #if last task was axis correction, then:
+    if ltName == "axis correction **Corner**" or ltName == "axis correction **Suave**" or ltName == 'recovery_task': #if last task was axis correction, then:
         print(isMoveSide)
-        if isMoveSide == "right": #if last task side was right, then:
+        if isMoveSide == "left": #if last task side was right, then:
             timer.reset()
             while se.reflection() > 40:
-                motors.start_tank(-200, 200)
-                if timer.time() >= timeout:
+                motors.start_tank(-300,300)
+                if timer.time() >= timeout*2:
                     motors.stop_tank()
                     return [name, "left", "failed"]
             move_side = "left"
             log = "succeded"
             motors.stop_tank()
-        if isMoveSide == "left": #if last task side was left, then:
+        if isMoveSide == "right": #if last task side was left, then:
             timer.reset()
             while sd.reflection() > 40:
-                motors.start_tank(200, -200)
-                if timer.time() >= timeout:
+                motors.start_tank(300,-300)
+                if timer.time() >= timeout*2:
                     motors.stop_tank()
                     return [name,"right","failed"]
             move_side = "right"
@@ -714,12 +714,23 @@ def desviarObs(lado = 'right'):
 
 #creating a function to detect if the robot is in the rescue zone
 def checarResgate(u_value):
-    if u_value > 350 and u_value < 930:
-        motors.stop_tank()
-        hub.speaker.beep()
-        motors.move_tank(3000,250,250)
-        resgate()    
-        return True
+    r = False
+    if u_value > 700 and u_value < 930:
+        motors.move_tank(500,-250,250)
+        if u2.distance() < 1000:
+            motors.move_tank(500,250,-250)
+            r = True
+        else:
+            motors.move_tank(1000,250,-250)
+            if u2.distance() < 1000:
+                r = True
+            motors.move_tank(500,-250,250)
+        if r:
+            motors.stop_tank()
+            hub.speaker.beep()
+            motors.move_tank(3000,250,250)
+            resgate()    
+            return True
     elif u_value < 100:
         hub.speaker.beep()
         motors.stop_tank()
