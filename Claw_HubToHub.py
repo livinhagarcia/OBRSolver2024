@@ -4,6 +4,22 @@ from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
 from pybricks.robotics import DriveBase
 from pybricks.tools import wait, StopWatch
 
+hub = PrimeHub()
+
+from pybricks.hubs import PrimeHub
+from pybricks.pupdevices import Motor, ColorSensor, UltrasonicSensor, ForceSensor
+from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
+from pybricks.robotics import DriveBase
+from pybricks.tools import wait, StopWatch
+
+hub = PrimeHub(broadcast_channel=2, observe_channels=[1])
+
+from pybricks.hubs import PrimeHub
+from pybricks.pupdevices import Motor, ColorSensor, UltrasonicSensor, ForceSensor
+from pybricks.parameters import Button, Color, Direction, Port, Side, Stop
+from pybricks.robotics import DriveBase
+from pybricks.tools import wait, StopWatch
+
 hub = PrimeHub(broadcast_channel=2, observe_channels=[1])
 
 class MotorPair:
@@ -42,10 +58,10 @@ class Claw:
         self.clawPair = MotorPair(P1,P2)
         self.hand = Motor(Hand)
     def up(self):
-        self.clawPair.move_tank(3000,-4000,4000)
+        self.clawPair.move_tank(1000,-4000,4000)
         print("up")
     def down(self):
-        self.clawPair.move_tank(3000,4000,-4000)
+        self.clawPair.move_tank(1000,4000,-4000)
         print("down")
     def open(self):
         self.hand.run_angle(-500,20)
@@ -54,7 +70,7 @@ class Claw:
         print("close")
     def pickUp(self):
         self.down()
-        wait(1000)
+        wait(1500)
         self.close()
         self.up()
     def release(self):
