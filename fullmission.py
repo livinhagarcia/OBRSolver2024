@@ -147,7 +147,7 @@ class Robot:
         self.position = position
         self.map = myMap(self.position)
         self.motors = motors
-        self.hub = PrimeHub()
+        self.hub = PrimeHub(broadcast_channel=1, observe_channels=[2])
         self.hub.imu.reset_heading(0)
         if force_sensor_port:
             self.force_sensor = ForceSensor(force_sensor_port)
@@ -308,27 +308,19 @@ class Robot:
             self.doRoute(lista, False, back)
 
 def FindSafe(areas):
-    global PontoInicial
     pos_areas = areas
-    print(PontoInicial)
     if [PontoInicial[0],PontoInicial[1]] in pos_areas:
-        print("plmrdedeus")
+        print("estou aqui")
         pos_areas.pop(pos_areas.index([PontoInicial[0],PontoInicial[1]]))
-    else:
-        print(PontoInicial)
-        print([PontoInicial[0],PontoInicial[1]])
-        print('N TA HEIN')
     if [out[0],out[1]] in pos_areas:
         pos_areas.pop(pos_areas.index([out[0],out[1]]))
     for area in pos_areas:
-        print("indo para:" + str(area))
-        robo.goTo(area[0], area[1])
-        leitura = sc.hsv()
-        # print(sc.hsv())
-        if [leitura.h,leitura.s,leitura.v] >= [155,80,60] and [leitura.h,leitura.s,leitura.v] <= [175,100,85]:
-            hub.speaker.beep()
-            robo.motors.stop_tank()
-            wait(2000)
+        robo.pointToaPoint(area[0], area[1])
+        wait(2000)
+        u_value = u2.distance()
+        if u_value > 50 and u_value < 350:
+            hub.speaker.beep
+            print('Safe on:' + str(area))
             return area
     return False
 
@@ -340,7 +332,7 @@ def resgate():
     wait(1000)
     hub.ble.broadcast(2) #claw reset
     wait(2000)
-    robo.back_goTo(Center)
+    robo.back_goTo(Center[0],Center[1])
     safe = FindSafe(AreaResgate)
     if not safe:
         robo.goTo(out[0], out[1])
@@ -352,13 +344,12 @@ def resgate():
         wait(1000)
         hub.ble.broadcast(2) #claw reset
         wait(2000)
-        robo.goTo(Center)
+        robo.goTo(Center[0],Center[1])
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
         wait(1000)
         robo.motors.move_tank(1000,250,250)
     print(robo.map.points)
-
 
 #creating update log function
 def updateLog(log):
@@ -370,7 +361,7 @@ def updateLog(log):
         return True
 
 #creating the axis correction function
-def axis_correction(last_move, set_point_c = 30, set_point_s = 65, timeout_s = 1000, timeout_c = 750):
+def axis_correction(last_move, set_point_c = 30, set_point_s = 65, timeout_s = 1000, timeout_c = 1250):
     timer = StopWatch()
     axisCorrectionDisplay()
     global corner
@@ -381,11 +372,12 @@ def axis_correction(last_move, set_point_c = 30, set_point_s = 65, timeout_s = 1
     if last_move != "axis correction **Corner**" and last_move != "axis correction **Suave**":
         corner = 0
     if corner >= 3:
+        corner += 1
         motors.stop_tank()
         if sd.reflection() < set_point_s:
             timer.reset()
             while sd.reflection() < set_point_s:
-                motors.start_tank(-200,0)
+                motors.start_tank(-200,50)
                 if timer.time() >= timeout_s:
                     motors.stop_tank()
                     return ["axis correction **Suave**", 'right', 'failed']
@@ -393,12 +385,12 @@ def axis_correction(last_move, set_point_c = 30, set_point_s = 65, timeout_s = 1
         elif se.reflection() < set_point_s : 
             timer.reset()
             while se.reflection() < set_point_s:
-                motors.start_tank(0,-200)
+                motors.start_tank(50,-200)
                 if timer.time() >= timeout_s:
                     motors.stop_tank()
                     return ["axis correction **Suave**",'left','failed']
             move_side = 'left'
-        if corner == 5:
+        if corner == 6:
             corner == 0
         name = "axis correction **Suave**"
         log = 'succeded'
@@ -714,7 +706,6 @@ Center = [45,45]
 AreaResgate = [[15,15],[15,75],[75,15],[75,75]]
 out = [75,45,90]
 safe = None
-
 robo = Robot(motors, None, [PontoInicial[0],PontoInicial[1], 0])
 
 time_recovery = 1
@@ -749,7 +740,7 @@ if __name__ == "__main__":
                 sc_value = sc.reflection() #constantly get the middle sensor value
                 errord = se_value - setPoint #constantly get the difference between the right value and the setPoint
                 errore = sd_value - setPoint #constantly get the difference between the left value and the setPoint
-                if se_value > 45 and sd_value > 45 and sc_value < 30: #if right-left sensors values are bigger then 50(if they are seeing white), and middle value is smaller then 55(if its seeing black), then(if the robot is in line):
+                if se.reflection() > 60 and sd.reflection() > 60 and sc.reflection() < 45: #if right-left sensors values are bigger then 50(if they are seeing white), and middle value is smaller then 55(if its seeing black), then(if the robot is in line):
                     updateLog(proportionalAlign(errore,errord,1.2)) #do proportional align to correct little route errors
                 else: #else(if the robot isn't in line), then:
                     valores_verdes = i.checkGreen(green_values) #constantly use the checkGreen function from the Intersection object to return if any of the right-left sensors are seeig green
@@ -768,9 +759,11 @@ if __name__ == "__main__":
                             se_value = se.reflection() #update the left sensor value
                             sd_value = sd.reflection() #update the right sensor value
                             sc_value = sc.reflection() #update the middle sensor value
+                            sensor_values = str(se_value) + ',' + str(sc_value) + ',' + str(sd_value) #sets a variable to show the updated sensor values
+                            print(sensor_values) #debug for showing the values of the sensor every second
                             errord = se_value - setPoint #update the errorD
                             errore = sd_value - setPoint #update the errorE
-                            if se_value > 50 and sd_value > 50 and sc_value < 30: #if the robot is in line, then:
+                            if se_value > 60 and sd_value > 60 and sc_value < 45: #if the robot is in line, then:
                                 updateLog(proportionalAlign(errore,errord,0.8)) #do proportional align 
                             else: #if the robot isn't in line, then:
                                 print('back until see black') #debug
@@ -783,7 +776,7 @@ if __name__ == "__main__":
                                 corner = 0
                                 updateLog(axis_correction(logs[-1][0])) # do axis correction after it returns
                         else: #else, if both left-right are seeing a value higher then 30, then:
-                            print('axis correction no branco') #debug
                             if se_value > 50 and sd_value > 50:
+                                print('axis correction no branco') #debug
                                 updateLog(["Axis Correction no branco",move_side,log])
                             updateLog(axis_correction(logs[-1][0])) #do axis correction
