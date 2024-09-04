@@ -5,7 +5,7 @@ from pybricks.robotics import DriveBase
 from pybricks.tools import wait, StopWatch
 import umath as math
 
-hub = PrimeHub()
+hub = PrimeHub(broadcast_channel=1)
 display = hub.display#defining the display object
 yaw = hub.imu#defining the angle object of the hub
 
