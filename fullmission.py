@@ -560,6 +560,66 @@ class Intersection:
                     esquerda = True
         return [esquerda, direita]
 
+class FinishLine:
+    def __init__(self, se, sd):
+        self.sd = sd
+        self.se = se
+        self.values = [[[330, 40, 62], [370, 110, 102]], [[329, 40, 63], [369, 98, 103]]]
+    def getRedValues(self,side):
+        hsv_min = [0,0,0]
+        hsv_max = [0,0,0]
+        hsv_med = [0,0,0]
+        if side == 'left':
+            sensor = self.se
+        elif side == "right":
+            sensor = self.sd
+        for x in range(200):
+            wait(10)
+            if side == "right":
+                calibrateRightDisplay(int((x+1)/2))
+            if side == "left":
+                calibrateLeftDisplay(int((x+1)/2))
+            hsv_obj = sensor.hsv()
+            hsv_med[0] += hsv_obj.h
+            hsv_med[1] += hsv_obj.s
+            hsv_med[2] += hsv_obj.v
+            print(hsv_med)
+        for i in range(3):
+            hsv_med[i] = hsv_med[i]/200
+            hsv_min[i] = hsv_med[i] - 20
+            hsv_max[i] = hsv_med[i] + 20  
+            # if hsv_obj.h < hsv_min[0] or hsv_min[0] == 0 :
+            #     hsv_min[0] = hsv_obj.h
+            # if hsv_obj.s < hsv_min[1] or hsv_min[1] == 0 :
+            #     hsv_min[1] = hsv_obj.s
+            # if hsv_obj.v < hsv_min[2] or hsv_min[2] == 0 :
+            #     hsv_min[2] = hsv_obj.v
+            # if hsv_obj.h > hsv_max[0]:
+            #     hsv_max[0] = hsv_obj.h
+            # if hsv_obj.s > hsv_max[1]:
+            #     hsv_max[1] = hsv_obj.s
+            # if hsv_obj.v > hsv_max[2]:
+            #     hsv_max[2] = hsv_obj.v 
+            wait(50)
+        hsv_values = [hsv_min, hsv_max]
+        print(hsv_values)
+        self.values = hsv_values
+        return hsv_values
+    def checkRed(self):
+        valuesE = self.values[0]
+        valuesD = self.values[1]
+        sensor_d = self.sd.hsv()
+        sensor_e = self.se.hsv()
+        if sensor_d.h > valuesD[0][0] and sensor_d.h < valuesD[1][0]:
+            if sensor_d.s > valuesD[0][1] and sensor_d.s < valuesD[1][1]:
+                if sensor_d.v > valuesD[0][2] and sensor_d.v < valuesD[1][2]:
+                    return True
+        if sensor_e.h > valuesE[0][0] and sensor_e.h < valuesE[1][0]:
+            if sensor_e.s > valuesE[0][1] and sensor_e.s < valuesE[1][1]:
+                if sensor_e.v > valuesE[0][2] and sensor_e.v < valuesE[1][2]:
+                    return True
+        return False
+
 #creating recovery task function
 def recoveryTask(set_point):
     print("recovery task")
@@ -702,6 +762,7 @@ sc = ColorSensor(Port.D)
 sd = ColorSensor(Port.C)
 se = ColorSensor(Port.F)
 i = Intersection(se, sd, green_values)
+red = FinishLine(se, sd)
 
 #creating the log list and the corner variable
 name = 'Beginning run'
@@ -752,6 +813,14 @@ if __name__ == "__main__":
             executionDisplay() #set the display to show an "E"w
             u_value = u2.distance() # constantly get the distance value
             while checarResgate(u_value) == False: #while the robot isn't in rescue zone, then:
+                if red.checkRed():
+                    motors.stop_tank()
+                    hub.speaker.play_notes(["E4/4", "G4/4", "A4/4"])
+                    wait(120)
+                    hub.speaker.play_notes(["E4/4", "G4/4"])
+                    hub.speaker.play_notes(["Bb4/4","A4/4"], 240)
+                    mode = ''
+                    break
                 print(u_value)
                 print(logs[-1],corner) #debug for showing the logs every second 
                 sensor_values = str(se.reflection()) + ',' + str(sc.reflection()) + ',' + str(sd.reflection()) #sets a variable to show the updated sensor values
