@@ -316,7 +316,7 @@ def FindSafe(areas):
         pos_areas.pop(pos_areas.index([out[0],out[1]]))
     for area in pos_areas:
         robo.pointToaPoint(area[0], area[1])
-        wait(2000)
+        wait(500)
         u_value = u2.distance()
         if u_value > 50 and u_value < 350:
             hub.speaker.beep
@@ -325,7 +325,10 @@ def FindSafe(areas):
     return False
 
 def resgate():
-    robo.motors.move_tank(500,250,250)
+    real_angle = robo.hub.imu.heading()
+    robo.position[2] = real_angle
+    robo.pointTo(PontoInicial[2])
+    robo.motors.move_tank(3000,250,250)
     robo.back_goTo(45,35)
     hub.ble.broadcast(0) #claw pickup
     wait(1000)
@@ -338,7 +341,7 @@ def resgate():
         robo.pointTo(out[2])
     else:
         robo.back_goTo(safe[0], safe[1])
-        wait(3000)
+        wait(1000)
         hub.ble.broadcast(1) #claw release
         wait(1000)
         hub.ble.broadcast(2) #claw reset
@@ -347,7 +350,6 @@ def resgate():
         robo.goTo(45,75)
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
-        wait(1000)
         robo.motors.move_tank(1000,250,250)
     print(robo.map.points)
 
@@ -419,6 +421,7 @@ def axis_correction(last_move, set_point_c = 30, set_point_s = 65, timeout_s = 1
 
 #creating the proportional align function
 def proportionalAlign(errorE,errorD, kP):
+    robo.hub.imu.reset_heading(0)
     proportionalAlignDisplay()
     name ='proportional align'
     move_side = ''
@@ -655,7 +658,7 @@ def checarResgate(u_value):
     if u_value > 700 and u_value < 930:
         motors.move_tank(500,-250,250)
         if u2.distance() < 1000:
-            motors.move_tank(500,250,-250)
+            motors.move_tank(700,250,-250)
             r = True
         else:
             motors.move_tank(1000,250,-250)
@@ -665,7 +668,6 @@ def checarResgate(u_value):
         if r:
             motors.stop_tank()
             hub.speaker.beep()
-            motors.move_tank(3000,250,250)
             resgate()    
             return True
     elif u_value < 100:
@@ -701,7 +703,7 @@ corner = 0
 mode = ""
 
 #Saídas = [[385,0],[1155,0],[1925,0],[385,2310][1155,2310],[1925,2310],[0,385],[0,1155],[0,1925],[2310,385],[2310,1155],[2310,1925]]
-PontoInicial = [45,30,0]
+PontoInicial = [45,10,0]
 Center = [45,45]
 AreaResgate = [[20,20],[20,70],[70,20],[70,70]]
 out = [75,85,90]
