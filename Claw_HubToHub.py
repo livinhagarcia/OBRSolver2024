@@ -48,7 +48,7 @@ class Claw:
         self.clawPair.move_tank(1000,4000,-4000)
         print("down")
     def slowdown(self):
-        self.clawPair.move_tank(600,3000,-3000)
+        self.clawPair.move_tank(600,500,-500)
         print("slowdown")
     def open(self):
         self.hand.run_angle(-500,20)
@@ -90,6 +90,11 @@ while True:
     inf = hub.ble.observe(1)
     print(inf)
     if inf == 0:
+        claw.pickUp()
+
+    elif inf == 1:
+        claw.release()
+    inf = None
         claw.pickUp()
 
     elif inf == 1:
