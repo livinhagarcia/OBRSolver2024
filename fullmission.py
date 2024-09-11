@@ -100,18 +100,7 @@ def desviarObsDisplay():
     display.pixel(3,3)
     display.pixel(4,1)
     display.pixel(4,2)
-def noModeDisplay():
-    display.off()
-    display.pixel(1,1)
-    display.pixel(1,2)
-    display.pixel(1,3)
-    display.pixel(2,1)
-    display.pixel(2,2)
-    display.pixel(2,3)
-    display.pixel(3,1)
-    display.pixel(3,2)
-    display.pixel(3,3)
-    
+
 #creating motor pair object
 class MotorPair:
     def __init__(self, port1, port2):
@@ -571,68 +560,6 @@ class Intersection:
                     esquerda = True
         return [esquerda, direita]
 
-class FinishLine:
-    def __init__(self, se, sd):
-        self.sd = sd
-        self.se = se
-        self.values = [[[330.065, 70.23, 62.5], [370.065, 110.23, 102.5]], [[329.63, 58.845, 63.85], [369.63, 98.845, 103.85]]]
-    def getRedValues(self,side):
-        hsv_min = [0,0,0]
-        hsv_max = [0,0,0]
-        hsv_med = [0,0,0]
-        if side == 'left':
-            sensor = self.se
-        elif side == "right":
-            sensor = self.sd
-        for x in range(200):
-            wait(10)
-            if side == "right":
-                calibrateRightDisplay(int((x+1)/2))
-            if side == "left":
-                calibrateLeftDisplay(int((x+1)/2))
-            hsv_obj = sensor.hsv()
-            hsv_med[0] += hsv_obj.h
-            hsv_med[1] += hsv_obj.s
-            hsv_med[2] += hsv_obj.v
-            print(hsv_med)
-        for i in range(3):
-            hsv_med[i] = hsv_med[i]/200
-            hsv_min[i] = hsv_med[i] - 20
-            hsv_max[i] = hsv_med[i] + 20  
-            # if hsv_obj.h < hsv_min[0] or hsv_min[0] == 0 :
-            #     hsv_min[0] = hsv_obj.h
-            # if hsv_obj.s < hsv_min[1] or hsv_min[1] == 0 :
-            #     hsv_min[1] = hsv_obj.s
-            # if hsv_obj.v < hsv_min[2] or hsv_min[2] == 0 :
-            #     hsv_min[2] = hsv_obj.v
-            # if hsv_obj.h > hsv_max[0]:
-            #     hsv_max[0] = hsv_obj.h
-            # if hsv_obj.s > hsv_max[1]:
-            #     hsv_max[1] = hsv_obj.s
-            # if hsv_obj.v > hsv_max[2]:
-            #     hsv_max[2] = hsv_obj.v 
-            wait(50)
-        hsv_values = [hsv_min, hsv_max]
-        print(hsv_values)
-        self.values = hsv_values
-        return hsv_values
-    def checkRed(self):
-        valuesE = self.values[0]
-        valuesD = self.values[1]
-        sensor_d = self.sd.hsv()
-        sensor_e = self.se.hsv()
-        direita = False
-        esquerda = False
-        if sensor_d.h > valuesD[0][0] and sensor_d.h < valuesD[1][0]:
-            if sensor_d.s > valuesD[0][1] and sensor_d.s < valuesD[1][1]:
-                if sensor_d.v > valuesD[0][2] and sensor_d.v < valuesD[1][2]:
-                    direita = True
-        if sensor_e.h > valuesE[0][0] and sensor_e.h < valuesE[1][0]:
-            if sensor_e.s > valuesE[0][1] and sensor_e.s < valuesE[1][1]:
-                if sensor_e.v > valuesE[0][2] and sensor_e.v < valuesE[1][2]:
-                    esquerda = True
-        return [esquerda, direita]
-
 #creating recovery task function
 def recoveryTask(set_point):
     print("recovery task")
@@ -814,35 +741,17 @@ if __name__ == "__main__":
         if hub.buttons.pressed() == {Button.RIGHT} : #if the right button were pressed, start the calibrate mode
             mode = "calibrate"
         if mode == "calibrate": #if the actual mode is calibrate, then:
-            wait(500)
-            if hub.buttons.pressed() == {Button.RIGHT} or data == 2:
-                print("------calibrando verde------") #debug
-                leftValues = i.getGreenValues("left") #set the variable leftValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the left sensor)
-                rightValues = i.getGreenValues("right") #set the variable rightValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the right sensor)
-                green_values = [leftValues, rightValues] #update the green_values array to the new values got with the intersection object 
-                print(green_values)#debug
-                mode = ""#set the mode to blank after the calibrate is done
-                noModeDisplay()
-            if hub.buttons.pressed() == {Button.LEFT} or data == 1:
-                print("------calibrando vermelho------")
-                leftValues = f.getRedValues("left")
-                rightValues = f.getRedValues("right")
-                red_values = [leftValues,rightValues]
-                print(red_values)
-                mode = ""
-                noModeDisplay()
+            print("------calibrando------") #debug
+            leftValues = i.getGreenValues("left") #set the variable leftValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the left sensor)
+            rightValues = i.getGreenValues("right") #set the variable rightValues with the function getGreenValues(Correct placement of the robot is necessary to get correct values for the right sensor)
+            green_values = [leftValues, rightValues] #update the green_values array to the new values got with the intersection object 
+            print(green_values)#debug
+            display.off()#turn off the display to show that the mode has restarted
+            mode = ""#set the mode to blank after the calibrate is done
         if mode == "execution": #if the actual mode is execution, then:
             executionDisplay() #set the display to show an "E"w
             u_value = u2.distance() # constantly get the distance value
-            while checarResgate(u_value) == False and robo.hub.ble.observe(2) != 3:#while the robot isn't in rescue zone, then:
-                if f.checkRed() == [True,True]:
-                    motors.stop_tank()
-                    hub.speaker.play_notes(["E4/4", "G4/4", "A4/4"])
-                    wait(120)
-                    hub.speaker.play_notes(["E4/4", "G4/4"])
-                    hub.speaker.play_notes(["Bb4/4","A4/4"], 240)
-                    mode = ""
-                    break
+            while checarResgate(u_value) == False: #while the robot isn't in rescue zone, then:
                 print(u_value)
                 print(logs[-1],corner) #debug for showing the logs every second 
                 sensor_values = str(se.reflection()) + ',' + str(sc.reflection()) + ',' + str(sd.reflection()) #sets a variable to show the updated sensor values
