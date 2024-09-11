@@ -47,6 +47,9 @@ class Claw:
     def down(self):
         self.clawPair.move_tank(1000,4000,-4000)
         print("down")
+    def slowdown(self):
+        self.clawPair.move_tank(600,3000,-3000)
+        print("slowdown")
     def open(self):
         self.hand.run_angle(-500,20)
     def close(self):
@@ -59,7 +62,7 @@ class Claw:
         self.up()
     def release(self):
         self.open()
-        self.down()
+        self.slowdown()
         wait(1000)
         self.up()
 
@@ -87,7 +90,6 @@ while True:
     inf = hub.ble.observe(1)
     print(inf)
     if inf == 0:
-        claw.clawPair.motor1.settings()
         claw.pickUp()
 
     elif inf == 1:
