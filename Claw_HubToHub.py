@@ -95,8 +95,3 @@ while True:
     elif inf == 1:
         claw.release()
     inf = None
-        claw.pickUp()
-
-    elif inf == 1:
-        claw.release()
-    inf = None
