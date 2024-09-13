@@ -48,7 +48,7 @@ class Claw:
         self.clawPair.move_tank(1000,4000,-4000)
         print("down")
     def slowdown(self):
-        self.clawPair.move_tank(600,500,-500)
+        self.clawPair.move_tank(600,3000,-3000)
         print("slowdown")
     def open(self):
         self.hand.run_angle(-500,20)
