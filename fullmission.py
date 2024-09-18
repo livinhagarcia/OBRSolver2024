@@ -5,7 +5,7 @@ from pybricks.robotics import DriveBase
 from pybricks.tools import wait, StopWatch
 import umath as math
 
-hub = PrimeHub()
+hub = PrimeHub(broadcast_channel=1)
 display = hub.display#defining the display object
 yaw = hub.imu#defining the angle object of the hub
 
@@ -316,7 +316,7 @@ def FindSafe(areas):
         pos_areas.pop(pos_areas.index([out[0],out[1]]))
     for area in pos_areas:
         robo.pointToaPoint(area[0], area[1])
-        wait(2000)
+        wait(500)
         u_value = u2.distance()
         if u_value > 50 and u_value < 350:
             hub.speaker.beep
@@ -325,9 +325,11 @@ def FindSafe(areas):
     return False
 
 def resgate():
-    robo.motors.move_tank(500,250,250)
-    robo.goTo(45,25)
-    robo.back_goTo(45,30)
+    real_angle = robo.hub.imu.heading()
+    robo.position[2] = real_angle
+    robo.pointTo(PontoInicial[2])
+    robo.motors.move_tank(3000,250,250)
+    robo.back_goTo(45,35)
     hub.ble.broadcast(0) #claw pickup
     wait(1000)
     hub.ble.broadcast(2) #claw reset
@@ -339,7 +341,7 @@ def resgate():
         robo.pointTo(out[2])
     else:
         robo.back_goTo(safe[0], safe[1])
-        wait(3000)
+        wait(1000)
         hub.ble.broadcast(1) #claw release
         wait(1000)
         hub.ble.broadcast(2) #claw reset
@@ -347,7 +349,6 @@ def resgate():
         robo.goTo(Center[0],Center[1])
         robo.goTo(out[0], out[1])
         robo.pointTo(out[2])
-        wait(1000)
         robo.motors.move_tank(1000,250,250)
     print(robo.map.points)
 
@@ -371,7 +372,7 @@ def axis_correction(last_move, set_point_c , set_point_s, timeout_s, timeout_c, 
     log = ''
     if last_move != "axis correction **Corner**" and last_move != "axis correction **Suave**":
         corner = 0
-    if corner >= 3:
+    if corner >= max_corner:
         corner += 1
         motors.stop_tank()
         if sd.reflection() < set_point_s:
@@ -729,7 +730,7 @@ def checarResgate(u_value):
     if u_value > 700 and u_value < 930:
         motors.move_tank(500,-250,250)
         if u2.distance() < 1000:
-            motors.move_tank(500,250,-250)
+            motors.move_tank(700,250,-250)
             r = True
         else:
             motors.move_tank(1000,250,-250)
@@ -739,7 +740,6 @@ def checarResgate(u_value):
         if r:
             motors.stop_tank()
             hub.speaker.beep()
-            motors.move_tank(3000,250,250)
             resgate()    
             return True
     elif u_value < 100:
@@ -774,17 +774,17 @@ corner = 0
 #creating the mode variable to use it later to choose the robot mode between calibrate mode and execution mode 
 mode = ""
 
-#Saídas = [[385,0],[1155,0],[1925,0],[385,2310][1155,2310],[1925,2310],[0,385],[0,1155],[0,1925],[2310,385],[2310,1155],[2310,1925]]
-PontoInicial = [45,15,0]
+PontoInicial = [45,10,0]
 Center = [45,45]
-AreaResgate = [[15,15],[15,75],[75,15],[75,75]]
+AreaResgate = [[20,20],[20,70],[70,20],[70,70]]
 out = [75,45,90]
-set_point_c = 30
+safe = None
+set_point_c = 28
 set_point_s = 55
-timeout_s = 1200
-timeout_c = 1350
-max_corner = 4
-kP = 2
+timeout_s = 800
+timeout_c = 900
+max_corner = 3
+kP = 4
 set_point_i1 = 50 
 set_point_i2 = 80
 set_point_r = 40
@@ -829,7 +829,7 @@ if __name__ == "__main__":
                 se_value = se.reflection() #constantly get the left sensor value
                 sd_value = sd.reflection() #constantly get the right sensor value 
                 sc_value = sc.reflection() #constantly get the middle sensor value
-                if se.reflection() > 50 and sd.reflection() > 50 and sc.reflection() < 55: #if right-left sensors values are bigger then 50(if they are seeing white), and middle value is smaller then 55(if its seeing black), then(if the robot is in line):
+                if se.reflection() > 45 and sd.reflection() > 45 and sc.reflection() < 50: #if right-left sensors values are bigger then 50(if they are seeing white), and middle value is smaller then 55(if its seeing black), then(if the robot is in line):
                     updateLog(proportionalAlign(se, sd, kP,set_point_p)) #do proportional align to correct little route errors
                 else: #else(if the robot isn't in line), then:
                     valores_verdes = i.checkGreen(green_values) #constantly use the checkGreen function from the Intersection object to return if any of the right-left sensors are seeig green
@@ -850,7 +850,7 @@ if __name__ == "__main__":
                             sc_value = sc.reflection() #update the middle sensor value
                             sensor_values = str(se_value) + ',' + str(sc_value) + ',' + str(sd_value) #sets a variable to show the updated sensor values
                             print(sensor_values) #debug for showing the values of the sensor every second
-                            if se.reflection() > 50 and sd.reflection() > 50 and sc.reflection() < 55: #if the robot is in line, then:
+                            if se.reflection() > 45 and sd.reflection() > 45 and sc.reflection() < 50: #if the robot is in line, then:
                                 updateLog(proportionalAlign(se,sd,kP,set_point_p)) #do proportional align 
                             else: #if the robot isn't in line, then:
                                 print('back until see black') #debug
