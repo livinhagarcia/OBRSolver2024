@@ -378,7 +378,7 @@ def axis_correction(last_move, set_point_c , set_point_s, timeout_s, timeout_c, 
         if sd.reflection() < set_point_s:
             timer.reset()
             while sd.reflection() < set_point_s:
-                motors.start_tank(-150,-50)
+                motors.start_tank(-100,50)
                 if timer.time() >= timeout_s:
                     motors.stop_tank()
                     return ["axis correction **Suave**", 'right', 'failed']
@@ -386,7 +386,7 @@ def axis_correction(last_move, set_point_c , set_point_s, timeout_s, timeout_c, 
         elif se.reflection() < set_point_s : 
             timer.reset()
             while se.reflection() < set_point_s:
-                motors.start_tank(-50,-150)
+                motors.start_tank(50,-100)
                 if timer.time() >= timeout_s:
                     motors.stop_tank()
                     return ["axis correction **Suave**",'left','failed']
@@ -399,7 +399,7 @@ def axis_correction(last_move, set_point_c , set_point_s, timeout_s, timeout_c, 
         if sd.reflection() > se.reflection():
             timer.reset()
             while sd.reflection() > set_point_c:
-                motors.start_tank(300,-50)
+                motors.start_tank(200,20)
                 move_side = 'right'
                 if timer.time() >= timeout_c:
                     corner += 1
@@ -408,7 +408,7 @@ def axis_correction(last_move, set_point_c , set_point_s, timeout_s, timeout_c, 
         else:
             timer.reset()
             while se.reflection() > set_point_c:
-                motors.start_tank(-50,300)
+                motors.start_tank(20,200)
                 move_side = 'left'
                 if timer.time() >= timeout_c:
                     corner += 1
@@ -426,8 +426,9 @@ def proportionalAlign(se, sd, kP,set_point):
     log='failed'
     errorE = se.reflection() - set_point
     errorD = sd.reflection() - set_point
-    leftMotorSpd = 50 + errorE * kP * 4.7 * 0.8
-    rightMotorSpd = 50 + errorD * kP * 4.7 * 0.8
+    diff = errorE - errorD
+    leftMotorSpd = 50 + (errorD + diff)*kP
+    rightMotorSpd = 50 + (errorE - diff)*kP
     motors.start_tank(leftMotorSpd,rightMotorSpd)
     diff_l_r = leftMotorSpd - rightMotorSpd
     if diff_l_r > 0:
@@ -659,7 +660,7 @@ def recoveryTask(set_point):
             timer.reset()
             while sd.reflection() > set_point:
                 motors.start_tank(300,-300)
-                if timer.time() >= timeout*2:
+                if timer.time() >= timeout:
                     motors.stop_tank()
                     time_recovery += 1
                     return [name,"right","failed"]
@@ -780,7 +781,7 @@ AreaResgate = [[20,20],[20,70],[70,20],[70,70]]
 out = [75,45,90]
 safe = None
 set_point_c = 28
-set_point_s = 55
+set_point_s = 65
 timeout_s = 800
 timeout_c = 900
 max_corner = 3
@@ -789,7 +790,7 @@ set_point_i1 = 50
 set_point_i2 = 80
 set_point_r = 40
 set_point_p = 77
-set_point_gap = 55
+set_point_gap = 65
 safe = None
 robo = Robot(motors, None, [PontoInicial[0],PontoInicial[1], 0])
 
@@ -829,7 +830,7 @@ if __name__ == "__main__":
                 se_value = se.reflection() #constantly get the left sensor value
                 sd_value = sd.reflection() #constantly get the right sensor value 
                 sc_value = sc.reflection() #constantly get the middle sensor value
-                if se.reflection() > 45 and sd.reflection() > 45 and sc.reflection() < 50: #if right-left sensors values are bigger then 50(if they are seeing white), and middle value is smaller then 55(if its seeing black), then(if the robot is in line):
+                if se.reflection() > 45 and sd.reflection() > 45 and sc.reflection() < 45: #if right-left sensors values are bigger then 50(if they are seeing white), and middle value is smaller then 55(if its seeing black), then(if the robot is in line):
                     updateLog(proportionalAlign(se, sd, kP,set_point_p)) #do proportional align to correct little route errors
                 else: #else(if the robot isn't in line), then:
                     valores_verdes = i.checkGreen(green_values) #constantly use the checkGreen function from the Intersection object to return if any of the right-left sensors are seeig green
@@ -850,7 +851,7 @@ if __name__ == "__main__":
                             sc_value = sc.reflection() #update the middle sensor value
                             sensor_values = str(se_value) + ',' + str(sc_value) + ',' + str(sd_value) #sets a variable to show the updated sensor values
                             print(sensor_values) #debug for showing the values of the sensor every second
-                            if se.reflection() > 45 and sd.reflection() > 45 and sc.reflection() < 50: #if the robot is in line, then:
+                            if se.reflection() > 45 and sd.reflection() > 45 and sc.reflection() < 45: #if the robot is in line, then:
                                 updateLog(proportionalAlign(se,sd,kP,set_point_p)) #do proportional align 
                             else: #if the robot isn't in line, then:
                                 print('back until see black') #debug
